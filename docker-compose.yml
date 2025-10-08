@@ -1,0 +1,53 @@
+services:
+  rabbitmq:
+    image: rabbitmq:4-management
+    container_name: rabbitmq
+    environment:
+      RABBITMQ_DEFAULT_USER: user
+      RABBITMQ_DEFAULT_PASS: pass
+    networks:
+      - rabbit_net
+
+  schools-service-migrate:
+    build: .
+    command: alembic upgrade head   # sovrascrive il comando di avvio eseguendo solo le migrazioni
+    depends_on:
+      - schools-service_db
+    networks:
+      - schools-service_net
+    deploy:
+      replicas: 1   # forza una sola istanza
+    restart: "no"   # non viene riavviato
+
+  schools-service:
+    build: .
+    command: gunicorn -k uvicorn.workers.UvicornWorker app.main:app --bind 0.0.0.0:8000 --workers 1
+    ports:
+      - "8000:8000"
+    depends_on:
+      - schools-service_db
+      - schools-service-migrate
+    networks:
+      - schools-service_net
+      - rabbit_net
+    restart: unless-stopped
+
+  schools-service_db:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: pass
+      POSTGRES_DB: schools-service
+    volumes:
+      - schools-service_db_data:/var/lib/postgresql/data
+    networks:
+      - schools-service_net
+    restart: unless-stopped
+
+volumes:
+  schools-service_db_data:
+
+networks:
+  schools-service_net:
+  rabbit_net:
+    driver: bridge

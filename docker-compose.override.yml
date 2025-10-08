@@ -1,0 +1,17 @@
+services:
+  rabbitmq:
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+
+  schools-service-migrate:
+    build: .
+    env_file: .env
+
+  schools-service:
+    build: .
+    env_file: .env
+
+  schools-service_db:
+    ports:
+      - "5432:5432"
