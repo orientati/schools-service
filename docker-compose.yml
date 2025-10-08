@@ -25,7 +25,7 @@ services:
     ports:
       - "8000:8000"
     depends_on:
-      - schools_service_db
+      - schools-service_db
       - schools-service-migrate
     networks:
       - schools_service_net
