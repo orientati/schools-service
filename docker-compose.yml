@@ -12,9 +12,9 @@ services:
     build: .
     command: alembic upgrade head   # sovrascrive il comando di avvio eseguendo solo le migrazioni
     depends_on:
-      - schools-service_db
+      - schools_service_db
     networks:
-      - schools-service_net
+      - schools_service_net
     deploy:
       replicas: 1   # forza una sola istanza
     restart: "no"   # non viene riavviato
@@ -25,10 +25,10 @@ services:
     ports:
       - "8000:8000"
     depends_on:
-      - schools-service_db
+      - schools_service_db
       - schools-service-migrate
     networks:
-      - schools-service_net
+      - schools_service_net
       - rabbit_net
     restart: unless-stopped
 
@@ -39,15 +39,15 @@ services:
       POSTGRES_PASSWORD: pass
       POSTGRES_DB: schools-service
     volumes:
-      - schools-service_db_data:/var/lib/postgresql/data
+      - schools_service_db_data:/var/lib/postgresql/data
     networks:
-      - schools-service_net
+      - schools_service_net
     restart: unless-stopped
 
 volumes:
-  schools-service_db_data:
+  schools_service_db_data:
 
 networks:
-  schools-service_net:
+  schools_service_net:
   rabbit_net:
     driver: bridge
