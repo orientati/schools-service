@@ -22,8 +22,6 @@ services:
   schools-service:
     build: .
     command: gunicorn -k uvicorn.workers.UvicornWorker app.main:app --bind 0.0.0.0:8000 --workers 1
-    ports:
-      - "8000:8000"
     depends_on:
       - schools-service_db
       - schools-service-migrate
