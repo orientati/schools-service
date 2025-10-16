@@ -1,13 +1,13 @@
 from __future__ import annotations
 
+import sys
 from contextlib import asynccontextmanager
 
 import sentry_sdk
-import sys
 from fastapi import FastAPI, APIRouter
 from fastapi.responses import ORJSONResponse
 
-from app.api.v1.routes import template
+from app.api.v1.routes import school
 from app.core.config import settings
 from app.core.logging import setup_logging, get_logger
 from app.db.base import import_models
@@ -32,8 +32,7 @@ async def callback(message):
 
 
 exchanges = {
-    "users": callback,
-    "banana": callback
+    "schools": callback
 }
 
 
@@ -79,9 +78,9 @@ app = FastAPI(
 current_router = APIRouter()
 
 current_router.include_router(
-    prefix="/template",
-    tags=[settings.SERVICE_NAME, "template"],
-    router=template.router,
+    prefix="/schools",
+    tags=[settings.SERVICE_NAME, "schools"],
+    router=school.router,
 )
 
 app.include_router(current_router, prefix=settings.API_PREFIX)

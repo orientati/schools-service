@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from app.schemas.template import TemplateRequest, TemplateResponse
+from app.schemas.school import TemplateRequest, TemplateResponse
 
 def template(request: TemplateRequest) -> TemplateResponse:
     #db.add(user)

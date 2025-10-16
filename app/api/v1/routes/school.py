@@ -4,8 +4,8 @@ from typing import List
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
-from app.schemas.template import TemplateResponse, TemplateRequest
-from app.services.template import template
+from app.schemas.school import TemplateResponse, TemplateRequest
+from app.services.school import template
 
 router = APIRouter()
 
