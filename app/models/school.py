@@ -8,24 +8,9 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.base import Base
 
-"""
-nome: str
-    tipo: str
-    indirizzo: str
-    città: str
-    provincia: str
-    codice_postale: str
-    email_contatto: EmailStr
-    telefono_contatto: str
-    indirizzi_scuola: List[SchoolAddress] = []
-    sito_web: str | None = None
-    descrizione: str | None = None
-    created_at: datetime | None = None
-    updated_at: datetime | None = None"""
-
 
 class Scuola(Base):
-    __tablename__ = "schools"
+    __tablename__ = "scuole"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
     nome: Mapped[str] = mapped_column(String, index=True, nullable=False)

@@ -6,7 +6,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.db.base import Base
 
 indirizzi_materie_table = Table(
-    "association_table",
+    "indirizzi_materie_table",
     Base.metadata,
     Column("indirizzo_id", ForeignKey("indirizzi.id"), primary_key=True),
     Column("materia_id", ForeignKey("materie.id"), primary_key=True),
@@ -19,6 +19,6 @@ class Indirizzo(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
     nome: Mapped[str] = mapped_column(String, index=True, nullable=False)
     descrizione: Mapped[str] = mapped_column(String, nullable=True)
-    id_scuola: Mapped[int] = Column(Integer, ForeignKey("Scuole.id"))
-    materie = relationship("Materie", secondary=indirizzi_materie_table)
-    scuola = relationship("Scuole", back_populates="indirizzi")
+    id_scuola: Mapped[int] = Column(Integer, ForeignKey("scuole.id"))
+    materie = relationship("materie", secondary=indirizzi_materie_table)
+    scuola = relationship("scuole", back_populates="indirizzi")
