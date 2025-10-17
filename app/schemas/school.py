@@ -36,12 +36,16 @@ class SchoolUpdate(SchoolBase):
     pass
 
 
+
 class SchoolsList(BaseModel):
-    scuole: List[SchoolCreate]
+    scuole: List[SchoolBase]
     total: int
     limit: int
     offset: int
-    filter_search: str
+    filter_search: str | None = None
+    filter_tipo: str | None = None
     filter_citta: str | None = None
     filter_provincia: str | None = None
     filter_indirizzo: str | None = None
+    sort_by: str | None = None
+    order: str | None = None
