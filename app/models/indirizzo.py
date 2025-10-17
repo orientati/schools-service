@@ -20,5 +20,5 @@ class Indirizzo(Base):
     nome: Mapped[str] = mapped_column(String, index=True, nullable=False)
     descrizione: Mapped[str] = mapped_column(String, nullable=True)
     id_scuola: Mapped[int] = Column(Integer, ForeignKey("scuole.id"))
-    materie = relationship("materie", secondary=indirizzi_materie_table)
-    scuola = relationship("scuole", back_populates="indirizzi")
+    materie = relationship("Materia", secondary=indirizzi_materie_table, back_populates="indirizzi")
+    scuola = relationship("Scuola", back_populates="indirizzi")
