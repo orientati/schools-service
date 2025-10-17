@@ -3,8 +3,8 @@ from __future__ import annotations
 from typing import Optional
 
 from app.api.deps import get_db
-from app.models import Scuola
-from app.schemas.school import SchoolsList, SchoolBase
+from app.models import Scuola, Citta
+from app.schemas.school import SchoolsList, SchoolBase, SchoolAddress
 
 
 async def get_schools(
@@ -35,55 +35,69 @@ async def get_schools(
     Returns:
         SchoolsList: Lista delle scuole con metadati di paginazione.
     """
-    db = next(get_db())
-    query = db.query(Scuola)
-    # applico i filtri
-    if search:
-        query = query.filter(Scuola.nome.ilike(f"%{search}%"))
-    if tipo:
-        query = query.filter(Scuola.tipo == tipo)
-    if citta:
-        query = query.join(Scuola.citta).filter_by(nome=citta)
-    if provincia:
-        query = query.join(Scuola.citta).filter_by(provincia=provincia)
-    if indirizzo:
-        query = query.filter(Scuola.indirizzo.ilike(f"%{indirizzo}%"))
-    # applico l'ordinamento
-    sort_column = {
-        "name": Scuola.nome,
-        "citta": Scuola.citta.has(),
-        "provincia": Scuola.citta.has()
-    }.get(sort_by, Scuola.nome)
-    if order == "desc":
-        sort_column = sort_column.desc()
-    query = query.order_by(sort_column)
-    total = query.count()
-    scuole = query.offset(offset).limit(limit).all()
-    return SchoolsList(
-        total=total,
-        limit=limit,
-        offset=offset,
-        scuole=SchoolBase(
-            nome=scuola.nome,
-            tipo=scuola.tipo,
-            indirizzo=scuola.indirizzo,
-            città=scuola.citta.nome,
-            provincia=scuola.citta.provincia,
-            codice_postale=scuola.citta.codice_postale,
-            email_contatto=scuola.email_contatto,
-            telefono_contatto=scuola.telefono_contatto,
-            indirizzi_scuola=[],  # da implementare
-            sito_web=scuola.sito_web,
-            descrizione=scuola.descrizione,
-            created_at=scuola.created_at,
-            updated_at=scuola.updated_at
+    try:
+        db = next(get_db())
+        query = db.query(Scuola).join(Scuola.citta)
+        # applico i filtri
+        if search:
+            query = query.filter(Scuola.nome.ilike(f"%{search}%"))
+        if tipo:
+            query = query.filter(Scuola.tipo == tipo)
+        if citta:
+            query = query.filter(Citta.nome == citta)
+        if provincia:
+            query = query.filter(Citta.provincia == provincia)
+        if indirizzo:
+            query = query.filter(Scuola.indirizzo.ilike(f"%{indirizzo}%"))
+        # applico l'ordinamento
+        sort_column = {
+            "name": Scuola.nome,
+            "citta": Scuola.citta.has(),
+            "provincia": Scuola.citta.has()
+        }.get(sort_by, Scuola.nome)
+        if order == "desc":
+            sort_column = sort_column.desc()
+        query = query.order_by(sort_column)
+        total = query.count()
+        scuole = query.offset(offset).limit(limit).all()
+
+        def build_school(scuola):
+
+            def build_address(addr):
+                return SchoolAddress(
+                    nome=addr.nome,
+                    descrizione=addr.descrizione,
+                    materie=[m.nome for m in addr.materie],
+                )
+
+            return SchoolBase(
+                nome=scuola.nome,
+                tipo=scuola.tipo,
+                indirizzo=scuola.indirizzo,
+                città=scuola.citta.nome,
+                provincia=scuola.citta.provincia,
+                codice_postale=scuola.citta.codice_postale,
+                email_contatto=scuola.email,
+                telefono_contatto=scuola.telefono,
+                indirizzi_scuola=[build_address(addr) for addr in scuola.indirizzi],
+                sito_web=scuola.sito_web,
+                descrizione=scuola.descrizione,
+                created_at=scuola.created_at,
+                updated_at=scuola.updated_at
+            )
+
+        return SchoolsList(
+            total=total,
+            limit=limit,
+            offset=offset,
+            scuole=[build_school(s) for s in scuole],
+            filter_search=search,
+            filter_tipo=tipo,
+            filter_citta=citta,
+            filter_provincia=provincia,
+            filter_indirizzo=indirizzo,
+            sort_by=sort_by,
+            order=order
         )
-    for scuola in scuole,
-    filter_search=search,
-    filter_tipo=tipo,
-    filter_citta=citta,
-    filter_provincia=provincia,
-    filter_indirizzo=indirizzo,
-    sort_by=sort_by,
-    order=order
-    )
+    except Exception as e:
+        raise e
