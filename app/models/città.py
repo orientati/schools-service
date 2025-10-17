@@ -14,4 +14,4 @@ class Citta(Base):
     nome: Mapped[str] = mapped_column(String, unique=True, index=True, nullable=False)
     provincia: Mapped[str] = mapped_column(String, index=True, nullable=False)
     codice_postale: Mapped[str] = mapped_column(String, index=True, nullable=False)
-    scuole: Mapped[List["Scuole"]] = relationship("Scuole", back_populates="citta")
+    scuole: Mapped[List["Scuola"]] = relationship("Scuola", back_populates="citta")
