@@ -7,12 +7,14 @@ from pydantic import BaseModel, EmailStr
 
 
 class SchoolAddress(BaseModel):  # indirizzo di studio
+    id: int | None = None
     nome: str
     descrizione: str | None = None
     materie: List[str] = []  # materie insegnate in questo indirizzo
 
 
 class SchoolBase(BaseModel):
+    id: int | None = None
     nome: str
     tipo: str
     indirizzo: str
@@ -34,7 +36,6 @@ class SchoolCreate(SchoolBase):
 
 class SchoolUpdate(SchoolBase):
     pass
-
 
 
 class SchoolsList(BaseModel):
