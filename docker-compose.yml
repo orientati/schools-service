@@ -35,7 +35,7 @@ services:
     environment:
       POSTGRES_USER: user
       POSTGRES_PASSWORD: pass
-      POSTGRES_DB: schools-service
+      POSTGRES_DB: schools_service
     volumes:
       - schools_service_db_data:/var/lib/postgresql/data
     networks:
