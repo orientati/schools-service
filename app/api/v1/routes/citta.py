@@ -2,13 +2,13 @@ from __future__ import annotations
 
 from fastapi import APIRouter
 
-from app.schemas.citta import CittaResponse
+from app.schemas.citta import CittaResponse, CittaList
 
 router = APIRouter()
 
 
-@router.get("/", response_model=CittaResponse)
-async def get_citta():
+@router.get("/", response_model=CittaList)
+async def get_citta():  # TODO: aggiungere offset e limit
     """
     Recupera la lista delle città disponibili.
 

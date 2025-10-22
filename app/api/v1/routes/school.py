@@ -103,3 +103,27 @@ async def post_school(school: SchoolCreate) -> SchoolResponse:
             detail="Errore interno del server"
         )
 
+
+@router.put("/{school_id}", response_model=SchoolResponse)
+async def put_school(school_id: int, school: SchoolCreate) -> SchoolResponse:
+    """
+    Aggiorna i dettagli di una scuola esistente.
+    Args:
+        school_id (int): ID della scuola da aggiornare.
+        school (SchoolCreate): Dati aggiornati della scuola.
+    Returns:
+        SchoolResponse: Dettagli della scuola aggiornata.
+    """
+    pass
+
+
+@router.delete("/{school_id}", response_model=dict)
+async def delete_school(school_id: int) -> dict:
+    """
+    Elimina una scuola esistente.
+    Args:
+        school_id (int): ID della scuola da eliminare.
+    Returns:
+        dict: Messaggio di conferma dell'eliminazione.
+    """
+    pass

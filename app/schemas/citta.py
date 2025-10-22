@@ -23,3 +23,10 @@ class CittaDelete(BaseModel):
 
 class CittaResponse(CittaBase):
     id: int | None = None
+
+
+class CittaList(BaseModel):
+    citta: list[CittaResponse]
+    total: int
+    limit: int
+    offset: int
