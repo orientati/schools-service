@@ -7,6 +7,33 @@ from app.models import Scuola, Citta
 from app.schemas.school import SchoolsList, SchoolBase, SchoolAddress
 
 
+def build_school(scuola: Scuola) -> SchoolBase:
+    def build_address(addr):
+        return SchoolAddress(
+            id=addr.id,
+            nome=addr.nome,
+            descrizione=addr.descrizione,
+            materie=[m.nome for m in addr.materie],
+        )
+
+    return SchoolBase(
+        id=scuola.id,
+        nome=scuola.nome,
+        tipo=scuola.tipo,
+        indirizzo=scuola.indirizzo,
+        città=scuola.citta.nome,
+        provincia=scuola.citta.provincia,
+        codice_postale=scuola.citta.codice_postale,
+        email_contatto=scuola.email,
+        telefono_contatto=scuola.telefono,
+        indirizzi_scuola=[build_address(addr) for addr in scuola.indirizzi],
+        sito_web=scuola.sito_web,
+        descrizione=scuola.descrizione,
+        created_at=scuola.created_at,
+        updated_at=scuola.updated_at
+    )
+
+
 async def get_schools(
         limit: int = 10,
         offset: int = 0,
@@ -61,33 +88,6 @@ async def get_schools(
         total = query.count()
         scuole = query.offset(offset).limit(limit).all()
 
-        def build_school(scuola):
-
-            def build_address(addr):
-                return SchoolAddress(
-                    id=addr.id,
-                    nome=addr.nome,
-                    descrizione=addr.descrizione,
-                    materie=[m.nome for m in addr.materie],
-                )
-
-            return SchoolBase(
-                id=scuola.id,
-                nome=scuola.nome,
-                tipo=scuola.tipo,
-                indirizzo=scuola.indirizzo,
-                città=scuola.citta.nome,
-                provincia=scuola.citta.provincia,
-                codice_postale=scuola.citta.codice_postale,
-                email_contatto=scuola.email,
-                telefono_contatto=scuola.telefono,
-                indirizzi_scuola=[build_address(addr) for addr in scuola.indirizzi],
-                sito_web=scuola.sito_web,
-                descrizione=scuola.descrizione,
-                created_at=scuola.created_at,
-                updated_at=scuola.updated_at
-            )
-
         return SchoolsList(
             total=total,
             limit=limit,
@@ -121,29 +121,7 @@ async def get_school_by_id(school_id: int):
         if not scuola:
             return None
 
-        def build_address(addr):
-            return SchoolAddress(
-                id=addr.id,
-                nome=addr.nome,
-                descrizione=addr.descrizione,
-                materie=[m.nome for m in addr.materie],
-            )
+        return build_school(scuola)
 
-        return SchoolBase(
-            id=scuola.id,
-            nome=scuola.nome,
-            tipo=scuola.tipo,
-            indirizzo=scuola.indirizzo,
-            città=scuola.citta.nome,
-            provincia=scuola.citta.provincia,
-            codice_postale=scuola.citta.codice_postale,
-            email_contatto=scuola.email,
-            telefono_contatto=scuola.telefono,
-            indirizzi_scuola=[build_address(addr) for addr in scuola.indirizzi],
-            sito_web=scuola.sito_web,
-            descrizione=scuola.descrizione,
-            created_at=scuola.created_at,
-            updated_at=scuola.updated_at
-        )
     except Exception as e:
         raise e
