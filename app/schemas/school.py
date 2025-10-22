@@ -14,32 +14,36 @@ class SchoolAddress(BaseModel):  # indirizzo di studio
 
 
 class SchoolBase(BaseModel):
-    id: int | None = None
     nome: str
     tipo: str
     indirizzo: str
-    città: str
-    provincia: str
-    codice_postale: str
     email_contatto: EmailStr
     telefono_contatto: str
-    indirizzi_scuola: List[SchoolAddress] = []
     sito_web: str | None = None
     descrizione: str | None = None
     created_at: datetime | None = None
     updated_at: datetime | None = None
 
 
+class SchoolResponse(SchoolBase):
+    id: int
+    città: str
+    provincia: str
+    codice_postale: str
+    indirizzi_scuola: List[SchoolAddress] = []
+
+
 class SchoolCreate(SchoolBase):
-    pass
+    citta_id: int
 
 
 class SchoolUpdate(SchoolBase):
-    pass
+    id: int
+    citta_id: int
 
 
 class SchoolsList(BaseModel):
-    scuole: List[SchoolBase]
+    scuole: List[SchoolResponse]
     total: int
     limit: int
     offset: int

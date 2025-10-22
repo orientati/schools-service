@@ -4,10 +4,10 @@ from typing import Optional
 
 from app.api.deps import get_db
 from app.models import Scuola, Citta
-from app.schemas.school import SchoolsList, SchoolBase, SchoolAddress
+from app.schemas.school import SchoolsList, SchoolResponse, SchoolAddress, SchoolCreate
 
 
-def build_school(scuola: Scuola) -> SchoolBase:
+def build_school(scuola: Scuola) -> SchoolResponse:
     def build_address(addr):
         return SchoolAddress(
             id=addr.id,
@@ -16,7 +16,7 @@ def build_school(scuola: Scuola) -> SchoolBase:
             materie=[m.nome for m in addr.materie],
         )
 
-    return SchoolBase(
+    return SchoolResponse(
         id=scuola.id,
         nome=scuola.nome,
         tipo=scuola.tipo,
@@ -113,7 +113,7 @@ async def get_school_by_id(school_id: int):
         school_id (int): ID della scuola da recuperare.
 
     Returns:
-        SchoolBase: Dettagli della scuola.
+        SchoolResponse: Dettagli della scuola.
     """
     try:
         db = next(get_db())
@@ -122,6 +122,43 @@ async def get_school_by_id(school_id: int):
             return None
 
         return build_school(scuola)
+
+    except Exception as e:
+        raise e
+
+
+async def create_school(school: SchoolCreate) -> SchoolResponse:
+    """
+    Crea una nuova scuola.
+
+    Args:
+        school (SchoolCreate): Dati della scuola da creare.
+
+    Returns:
+        SchoolResponse: Dettagli della scuola creata.
+    """
+    try:
+        db = next(get_db())
+        citta = db.query(Citta).filter(Citta.id == school.citta_id).first()
+
+        if not citta:
+            raise ValueError(f"Città con ID {school.citta_id} non trovata")
+
+        nuova_scuola = Scuola(
+            nome=school.nome,
+            tipo=school.tipo,
+            indirizzo=school.indirizzo,
+            id_citta=citta.id,
+            email=school.email_contatto,
+            telefono=school.telefono_contatto,
+            sito_web=school.sito_web,
+            descrizione=school.descrizione
+        )
+        db.add(nuova_scuola)
+        db.commit()
+        db.refresh(nuova_scuola)
+
+        return build_school(nuova_scuola)
 
     except Exception as e:
         raise e

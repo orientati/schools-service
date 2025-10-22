@@ -5,7 +5,7 @@ from typing import Optional
 from fastapi import APIRouter, HTTPException
 from fastapi import Query
 
-from app.schemas.school import SchoolsList, SchoolBase
+from app.schemas.school import SchoolsList, SchoolResponse, SchoolCreate
 from app.services import school as school_service
 
 router = APIRouter()
@@ -53,8 +53,9 @@ async def get_schools(
             detail="Errore interno del server"
         )
 
-@router.get("/{school_id}", response_model=SchoolBase)
-async def get_school_by_id(school_id: int) -> SchoolBase:
+
+@router.get("/{school_id}", response_model=SchoolResponse)
+async def get_school_by_id(school_id: int) -> SchoolResponse:
     """
     Recupera i dettagli di una scuola dato il suo ID.
 
@@ -62,13 +63,38 @@ async def get_school_by_id(school_id: int) -> SchoolBase:
         school_id (int): ID della scuola da recuperare.
 
     Returns:
-        SchoolBase: Dettagli della scuola.
+        SchoolResponse: Dettagli della scuola.
     """
     try:
         return await school_service.get_school_by_id(school_id)
     except ValueError as e:
         raise HTTPException(
             status_code=404,
+            detail=str(e)
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail="Errore interno del server"
+        )
+
+
+@router.post("/", response_model=SchoolResponse)
+async def post_school(school: SchoolCreate) -> SchoolResponse:
+    """
+    Crea una nuova scuola.
+    Args:
+        school (SchoolCreate): Dati della scuola da creare.
+    Returns:
+        SchoolResponse: Dettagli della scuola creata.
+    """
+    try:
+        scuola = await school_service.create_school(school)
+        print(scuola)
+        return scuola
+    except ValueError as e:
+        raise HTTPException(
+            status_code=400,
             detail=str(e)
         )
     except Exception as e:
