@@ -102,3 +102,4 @@ async def post_school(school: SchoolCreate) -> SchoolResponse:
             status_code=500,
             detail="Errore interno del server"
         )
+
