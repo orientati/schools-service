@@ -5,8 +5,10 @@ from typing import Optional
 from fastapi import APIRouter, HTTPException
 from fastapi import Query
 
-from app.schemas.school import SchoolsList, SchoolResponse, SchoolCreate
+from app.schemas.school import SchoolsList, SchoolResponse, SchoolCreate, SchoolDeleteResponse
 from app.services import school as school_service
+from app.services.http_client import OrientatiException
+from fastapi.responses import JSONResponse
 
 router = APIRouter()
 
@@ -42,15 +44,14 @@ async def get_schools(
             sort_by=sort_by,
             order=order
         )
-    except ValueError as e:
-        raise HTTPException(
-            status_code=400,
-            detail=str(e)
-        )
-    except Exception as e:
-        raise HTTPException(
-            status_code=500,
-            detail="Errore interno del server"
+    except OrientatiException as e:
+        return JSONResponse(
+            status_code=e.status_code,
+            content={
+                "message": e.message,
+                "details": e.details,
+                "url": e.url
+            }
         )
 
 
@@ -67,15 +68,14 @@ async def get_school_by_id(school_id: int) -> SchoolResponse:
     """
     try:
         return await school_service.get_school_by_id(school_id)
-    except ValueError as e:
-        raise HTTPException(
-            status_code=404,
-            detail=str(e)
-        )
-    except Exception as e:
-        raise HTTPException(
-            status_code=500,
-            detail="Errore interno del server"
+    except OrientatiException as e:
+        return JSONResponse(
+            status_code=e.status_code,
+            content={
+                "message": e.message,
+                "details": e.details,
+                "url": e.url
+            }
         )
 
 
@@ -92,17 +92,15 @@ async def post_school(school: SchoolCreate) -> SchoolResponse:
         scuola = await school_service.create_school(school)
         print(scuola)
         return scuola
-    except ValueError as e:
-        raise HTTPException(
-            status_code=400,
-            detail=str(e)
+    except OrientatiException as e:
+        return JSONResponse(
+            status_code=e.status_code,
+            content={
+                "message": e.message,
+                "details": e.details,
+                "url": e.url
+            }
         )
-    except Exception as e:
-        raise HTTPException(
-            status_code=500,
-            detail="Errore interno del server"
-        )
-
 
 @router.put("/{school_id}", response_model=SchoolResponse)
 async def put_school(school_id: int, school: SchoolCreate) -> SchoolResponse:
@@ -114,16 +112,36 @@ async def put_school(school_id: int, school: SchoolCreate) -> SchoolResponse:
     Returns:
         SchoolResponse: Dettagli della scuola aggiornata.
     """
-    pass
-
+    try:
+        update_data = school.dict(exclude_unset=True)
+        return await school_service.update_school(school_id, update_data)
+    except OrientatiException as e:
+        return JSONResponse(
+            status_code=e.status_code,
+            content={
+                "message": e.message,
+                "details": e.details,
+                "url": e.url
+            }
+        )
 
 @router.delete("/{school_id}", response_model=dict)
-async def delete_school(school_id: int) -> dict:
+async def delete_school(school_id: int) -> SchoolDeleteResponse:
     """
     Elimina una scuola esistente.
     Args:
         school_id (int): ID della scuola da eliminare.
     Returns:
-        dict: Messaggio di conferma dell'eliminazione.
+        SchoolDeleteResponse: Conferma dell'eliminazione della scuola.
     """
-    pass
+    try:
+        pass
+    except OrientatiException as e:
+        return JSONResponse(
+            status_code=e.status_code,
+            content={
+                "message": e.message,
+                "details": e.details,
+                "url": e.url
+            }
+        )

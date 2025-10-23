@@ -54,3 +54,6 @@ class SchoolsList(BaseModel):
     filter_indirizzo: str | None = None
     sort_by: str | None = None
     order: str | None = None
+
+class SchoolDeleteResponse(BaseModel):
+    message: str = "School deleted successfully"

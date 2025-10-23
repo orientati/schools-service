@@ -6,6 +6,8 @@ from app.api.deps import get_db
 from app.models import Scuola, Citta
 from app.schemas.school import SchoolsList, SchoolResponse, SchoolAddress, SchoolCreate
 
+from app.services.http_client import OrientatiException
+
 
 def build_school(scuola: Scuola) -> SchoolResponse:
     def build_address(addr):
@@ -102,8 +104,10 @@ async def get_schools(
             order=order
         )
     except Exception as e:
-        raise e
-
+        raise OrientatiException(
+            url="schools/get",
+            exc=e
+        )
 
 async def get_school_by_id(school_id: int):
     """
@@ -124,7 +128,10 @@ async def get_school_by_id(school_id: int):
         return build_school(scuola)
 
     except Exception as e:
-        raise e
+        raise OrientatiException(
+            url=f"schools/{school_id}",
+            exc=e
+        )
 
 
 async def create_school(school: SchoolCreate) -> SchoolResponse:
@@ -142,7 +149,12 @@ async def create_school(school: SchoolCreate) -> SchoolResponse:
         citta = db.query(Citta).filter(Citta.id == school.citta_id).first()
 
         if not citta:
-            raise ValueError(f"Città con ID {school.citta_id} non trovata")
+            raise OrientatiException(
+                status_code=404,
+                url="schools/create",
+                message="Not Found",
+                details={"message": "City Not Found"}
+            )
 
         nuova_scuola = Scuola(
             nome=school.nome,
@@ -160,5 +172,81 @@ async def create_school(school: SchoolCreate) -> SchoolResponse:
 
         return build_school(nuova_scuola)
 
-    except Exception as e:
+    except OrientatiException as e:
         raise e
+    except Exception as e:
+        raise OrientatiException(
+            url="schools/create",
+            exc=e
+        )
+
+def find_key(data: dict, target_key: str):
+    """
+    Cerca una chiave specifica in un dizionario annidato.
+
+    :param data: Il dizionario in cui cercare.
+    :param target_key: La chiave da cercare.
+    :return:
+    """
+
+    for key, value in data.items():
+        if key == target_key:
+            return True
+    return False
+
+async def update_school(school_id: int, school: dict) -> SchoolResponse:
+    """
+    Aggiorna una scuola esistente.
+
+    Args:
+        school_id (int): ID della scuola da aggiornare.
+        school (SchoolCreate): Dati aggiornati della scuola.
+
+    Returns:
+        SchoolResponse: Dettagli della scuola aggiornata.
+    """
+    try:
+        db = next(get_db())
+        scuola = db.query(Scuola).filter(Scuola.id == school_id).first()
+
+        if not scuola:
+            raise OrientatiException(
+                status_code=404,
+                url=f"schools/{school_id}/update",
+                message="Not Found",
+                details={"message": "School Not Found"}
+            )
+
+        # Se ho un id di una citta, allora aggiorno la citta, senno no
+        id_citta = school.get("citta_id", None)
+        if id_citta is not None:
+            citta = db.query(Citta).filter(Citta.id == school.citta_id).first()
+
+            if not citta:
+                raise OrientatiException(
+                    status_code=404,
+                    url=f"schools/{school_id}/update",
+                    message="Not Found",
+                    details={"message": "City Not Found"}
+                )
+        scuola.nome         = school["nome"]               if find_key(school, "nome") and school["name"] is not None               else scuola.nome
+        scuola.tipo         = school["tipo"]               if find_key(school, "tipo") and school["tipo"] is not None               else scuola.tipo
+        scuola.indirizzo    = school["indirizzo"]          if find_key(school, "indirizzo") and school["indirizzo"]                 else scuola.indirizzo
+        scuola.id_citta     = citta.id                     if id_citta is not None                                                            else scuola.id_citta
+        scuola.email        = school["email_contatto"]     if find_key(school, "email_contatto") and school["email_contatto"]       else scuola.email
+        scuola.telefono     = school["telefono_contatto"]  if find_key(school, "telefono_contatto") and school["telefono_contatto"] else scuola.telefono
+        scuola.sito_web     = school["sito_web"]           if find_key(school, "sito_web")                                          else scuola.sito_web
+        scuola.descrizione  = school["descrizione"]        if find_key(school, "descrizione")                                       else scuola.descrizione
+
+        db.commit()
+        db.refresh(scuola)
+
+        return build_school(scuola)
+
+    except OrientatiException as e:
+        raise e
+    except Exception as e:
+        raise OrientatiException(
+            url=f"schools/{school_id}/update",
+            exc=e
+        )
