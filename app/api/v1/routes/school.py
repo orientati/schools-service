@@ -125,7 +125,7 @@ async def put_school(school_id: int, school: SchoolCreate) -> SchoolResponse:
             }
         )
 
-@router.delete("/{school_id}", response_model=dict)
+@router.delete("/{school_id}", response_model=SchoolDeleteResponse)
 async def delete_school(school_id: int) -> SchoolDeleteResponse:
     """
     Elimina una scuola esistente.
