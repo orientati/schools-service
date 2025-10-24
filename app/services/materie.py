@@ -26,6 +26,7 @@ async def get_materie(
         limit (int): Numero massimo di materie da restituire.
         offset (int): Numero di materie da saltare per la paginazione.
         search (str | None): Termine di ricerca per filtrare le materie per nome.
+        sort_by (str | None): Campo per ordinamento (es. nome).
         order (str | None): Ordine: 'asc' o 'desc'.
 
     Returns:

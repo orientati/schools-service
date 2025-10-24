@@ -3,7 +3,7 @@ from __future__ import annotations
 from fastapi import APIRouter
 from fastapi import Query
 
-from app.schemas.materia import MateriaResponse, MateriaList, MateriaCreate, MateriaUpdate
+from app.schemas.materia import MateriaResponse, MateriaList, MateriaUpdate
 from app.services import materie as MaterieService
 
 router = APIRouter()
@@ -14,7 +14,9 @@ async def get_materie(
         limit: int = Query(default=10, ge=1, le=100, description="Numero di materie da restituire (1-100)"),
         offset: int = Query(default=0, ge=0, description="Numero di materie da saltare per la paginazione"),
         search: str = Query(default=None, description="Termine di ricerca per filtrare le materie per nome"),
+        sort_by: str = Query(default=None, description="Campo per ordinamento (es. nome)"),
         order: str = Query(default="asc", regex="^(asc|desc)$", description="Ordine: asc o desc")
+
 ):
     """
     Recupera la lista delle materie, con opzioni di paginazione e filtro.
@@ -28,6 +30,7 @@ async def get_materie(
             limit=limit,
             offset=offset,
             search=search,
+            sort_by=sort_by,
             order=order
         )
     except Exception as e:
