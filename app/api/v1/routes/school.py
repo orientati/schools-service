@@ -135,7 +135,7 @@ async def delete_school(school_id: int) -> SchoolDeleteResponse:
         SchoolDeleteResponse: Conferma dell'eliminazione della scuola.
     """
     try:
-        pass
+        return await school_service.delete_school(school_id)
     except OrientatiException as e:
         return JSONResponse(
             status_code=e.status_code,

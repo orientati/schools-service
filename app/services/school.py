@@ -4,7 +4,7 @@ from typing import Optional
 
 from app.api.deps import get_db
 from app.models import Scuola, Citta
-from app.schemas.school import SchoolsList, SchoolResponse, SchoolAddress, SchoolCreate
+from app.schemas.school import SchoolsList, SchoolResponse, SchoolAddress, SchoolCreate, SchoolDeleteResponse
 
 from app.services.http_client import OrientatiException
 
@@ -229,14 +229,14 @@ async def update_school(school_id: int, school: dict) -> SchoolResponse:
                     message="Not Found",
                     details={"message": "City Not Found"}
                 )
-        scuola.nome         = school["nome"]               if find_key(school, "nome") and school["name"] is not None               else scuola.nome
-        scuola.tipo         = school["tipo"]               if find_key(school, "tipo") and school["tipo"] is not None               else scuola.tipo
-        scuola.indirizzo    = school["indirizzo"]          if find_key(school, "indirizzo") and school["indirizzo"]                 else scuola.indirizzo
-        scuola.id_citta     = citta.id                     if id_citta is not None                                                            else scuola.id_citta
-        scuola.email        = school["email_contatto"]     if find_key(school, "email_contatto") and school["email_contatto"]       else scuola.email
-        scuola.telefono     = school["telefono_contatto"]  if find_key(school, "telefono_contatto") and school["telefono_contatto"] else scuola.telefono
-        scuola.sito_web     = school["sito_web"]           if find_key(school, "sito_web")                                          else scuola.sito_web
-        scuola.descrizione  = school["descrizione"]        if find_key(school, "descrizione")                                       else scuola.descrizione
+        scuola.nome         = school["nome"]               if find_key(school, "nome") and school["name"] is not None                               else scuola.nome
+        scuola.tipo         = school["tipo"]               if find_key(school, "tipo") and school["tipo"] is not None                               else scuola.tipo
+        scuola.indirizzo    = school["indirizzo"]          if find_key(school, "indirizzo") and school["indirizzo"]                                 else scuola.indirizzo
+        scuola.id_citta     = citta.id                     if id_citta is not None                                                                            else scuola.id_citta
+        scuola.email        = school["email_contatto"]     if find_key(school, "email_contatto") and school["email_contatto"] is not None           else scuola.email
+        scuola.telefono     = school["telefono_contatto"]  if find_key(school, "telefono_contatto") and school["telefono_contatto"] is not None     else scuola.telefono
+        scuola.sito_web     = school["sito_web"]           if find_key(school, "sito_web")                                                          else scuola.sito_web
+        scuola.descrizione  = school["descrizione"]        if find_key(school, "descrizione")                                                       else scuola.descrizione
 
         db.commit()
         db.refresh(scuola)
@@ -248,5 +248,40 @@ async def update_school(school_id: int, school: dict) -> SchoolResponse:
     except Exception as e:
         raise OrientatiException(
             url=f"schools/{school_id}/update",
+            exc=e
+        )
+
+async def delete_school(school_id: int) -> SchoolDeleteResponse:
+    """
+    Elimina una scuola esistente.
+
+    Args:
+        school_id (int): ID della scuola da eliminare.
+
+    Returns:
+        bool: True se la scuola è stata eliminata con successo, False altrimenti.
+    """
+    try:
+        db = next(get_db())
+        scuola = db.query(Scuola).filter(Scuola.id == school_id).first()
+
+        if not scuola:
+            raise OrientatiException(
+                status_code=404,
+                url=f"schools/{school_id}/delete",
+                message="Not Found",
+                details={"message": "School Not Found"}
+            )
+
+        db.delete(scuola)
+        db.commit()
+
+        return SchoolDeleteResponse()
+
+    except OrientatiException as e:
+        raise e
+    except Exception as e:
+        raise OrientatiException(
+            url=f"schools/{school_id}/delete",
             exc=e
         )
