@@ -45,7 +45,10 @@ async def get_materia_by_id(materia_id: int):
     Returns:
         MateriaResponse: Dettagli della materia
     """
-    pass
+    try:
+        return await MaterieService.get_materia_by_id(materia_id)
+    except Exception as e:
+        raise e
 
 
 @router.post("/", response_model=MateriaResponse)

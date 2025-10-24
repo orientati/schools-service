@@ -57,3 +57,22 @@ async def get_materie(
         )
     except Exception as e:
         raise e
+
+
+async def get_materia_by_id(materia_id: int) -> MateriaResponse:
+    """Recupera i dettagli di una materia dato il suo ID.
+
+    Args:
+        materia_id (int): ID della materia da recuperare.
+
+    Returns:
+        MateriaResponse: Dettagli della materia.
+    """
+    try:
+        db = next(get_db())
+        materia = db.query(Materia).filter(Materia.id == materia_id).first()
+        if not materia:
+            raise Exception(f"Materia con ID {materia_id} non trovata.")
+        return build_materia(materia)
+    except Exception as e:
+        raise e
