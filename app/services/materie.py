@@ -76,3 +76,26 @@ async def get_materia_by_id(materia_id: int) -> MateriaResponse:
         return build_materia(materia)
     except Exception as e:
         raise e
+
+
+async def create_materia(materia_data: MateriaResponse) -> MateriaResponse:
+    """Crea una nuova materia.
+
+    Args:
+        materia_data (MateriaResponse): Dati della materia da creare.
+
+    Returns:
+        MateriaResponse: Dettagli della materia creata.
+    """
+    try:
+        db = next(get_db())
+        nuova_materia = Materia(
+            nome=materia_data.nome,
+            descrizione=materia_data.descrizione
+        )
+        db.add(nuova_materia)
+        db.commit()
+        db.refresh(nuova_materia)
+        return build_materia(nuova_materia)
+    except Exception as e:
+        raise e

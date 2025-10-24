@@ -62,7 +62,10 @@ async def post_materia(materia: MateriaCreate):
     Returns:
         MateriaResponse: Dettagli della materia creata
     """
-    pass
+    try:
+        return await MaterieService.create_materia(materia)
+    except Exception as e:
+        raise e
 
 
 @router.put("/{materia_id}", response_model=MateriaResponse)
