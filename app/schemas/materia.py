@@ -31,3 +31,6 @@ class MateriaList(BaseModel):
     total: int
     offset: int
     limit: int
+    filter_search: str | None = None
+    sort_by: str | None = None
+    order: str | None = None

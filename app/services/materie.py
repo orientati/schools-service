@@ -1,0 +1,59 @@
+from __future__ import annotations
+
+from app.api.deps import get_db
+from app.models import Materia
+from app.schemas.materia import MateriaList, MateriaResponse
+
+
+def build_materia(materie) -> MateriaResponse:
+    return MateriaResponse(
+        id=materie.id,
+        nome=materie.nome,
+        descrizione=materie.descrizione
+    )
+
+
+async def get_materie(
+        limit: int = 100,
+        offset: int = 0,
+        search: str | None = None,
+        sort_by: str | None = None,
+        order: str | None = None
+) -> MateriaList:
+    """Recupera la lista delle materie con opzioni di paginazione e filtro.
+
+    Args:
+        limit (int): Numero massimo di materie da restituire.
+        offset (int): Numero di materie da saltare per la paginazione.
+        search (str | None): Termine di ricerca per filtrare le materie per nome.
+        order (str | None): Ordine: 'asc' o 'desc'.
+
+    Returns:
+        MateriaList: Lista delle materie con metadati di paginazione.
+    """
+    try:
+        db = next(get_db())
+        query = db.query(Materia)
+        # applico i filtri
+        if search:
+            query = query.filter(Materia.nome.ilike(f"%{search}%"))
+        # applico l'ordinamento
+        sort_column = {
+            "name": Materia.nome,
+        }.get(sort_by, Materia.nome)
+        if order == "desc":
+            sort_column = sort_column.desc()
+        query = query.order_by(sort_column)
+        total = query.count()
+        materie = query.offset(offset).limit(limit).all()
+        return MateriaList(
+            total=total,
+            limit=limit,
+            offset=offset,
+            materie=[build_materia(m) for m in materie],
+            filter_search=search,
+            sort_by=sort_by,
+            order=order
+        )
+    except Exception as e:
+        raise e
