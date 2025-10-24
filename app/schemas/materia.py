@@ -19,7 +19,7 @@ class MateriaCreate(MateriaBase):
 
 
 class MateriaUpdate(MateriaBase):
-    id: int
+    pass
 
 
 class MateriaDelete(BaseModel):

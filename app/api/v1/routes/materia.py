@@ -75,12 +75,15 @@ async def put_materia(materia_id: int, materia: MateriaUpdate):
 
     Args:
         materia_id (int): ID della materia da aggiornare
-        materia (MateriaResponse): Dati aggiornati della materia
+        materia (MateriaUpdate): Dati aggiornati della materia
 
     Returns:
         MateriaResponse: Dettagli della materia aggiornata
     """
-    pass
+    try:
+        return await MaterieService.update_materia(materia_id, materia)
+    except Exception as e:
+        raise e
 
 
 @router.delete("/{materia_id}", response_model=MateriaResponse)

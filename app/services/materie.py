@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from app.api.deps import get_db
 from app.models import Materia
-from app.schemas.materia import MateriaList, MateriaResponse
+from app.schemas.materia import MateriaList, MateriaResponse, MateriaUpdate
 
 
 def build_materia(materie) -> MateriaResponse:
@@ -97,5 +97,29 @@ async def create_materia(materia_data: MateriaResponse) -> MateriaResponse:
         db.commit()
         db.refresh(nuova_materia)
         return build_materia(nuova_materia)
+    except Exception as e:
+        raise e
+
+
+async def update_materia(materia_id: int, materia_data: MateriaUpdate) -> MateriaResponse:
+    """Aggiorna i dettagli di una materia esistente.
+
+    Args:
+        materia_id (int): ID della materia da aggiornare.
+        materia_data (MateriaUpdate): Dati aggiornati della materia.
+
+    Returns:
+        MateriaResponse: Dettagli della materia aggiornata.
+    """
+    try:
+        db = next(get_db())
+        materia = db.query(Materia).filter(Materia.id == materia_id).first()
+        if not materia:
+            raise Exception(f"Materia con ID {materia_id} non trovata.")
+        materia.nome = materia_data.nome
+        materia.descrizione = materia_data.descrizione
+        db.commit()
+        db.refresh(materia)
+        return build_materia(materia)
     except Exception as e:
         raise e
