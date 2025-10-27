@@ -14,7 +14,7 @@ class CittaCreate(CittaBase):
 
 
 class CittaUpdate(CittaBase):
-    id: int
+    pass
 
 
 class CittaDelete(BaseModel):

@@ -9,7 +9,8 @@ def build_citta(citta: Citta) -> CittaResponse:
     return CittaResponse(
         id=citta.id,
         nome=citta.nome,
-        provincia=citta.provincia
+        provincia=citta.provincia,
+        codice_postale=citta.codice_postale
     )
 
 
@@ -87,7 +88,8 @@ async def post_citta(citta: CittaCreate) -> CittaResponse:
         db = next(get_db())
         nuova_citta = Citta(
             nome=citta.nome,
-            provincia=citta.provincia
+            provincia=citta.provincia,
+            codice_postale=citta.codice_postale
         )
         db.add(nuova_citta)
         db.commit()
@@ -113,8 +115,12 @@ async def put_citta(citta_id: int, citta: CittaUpdate) -> CittaResponse:
         citta_db = db.query(Citta).filter(Citta.id == citta_id).first()
         if not citta_db:
             raise Exception("Città non trovata")
-        citta_db.nome = citta.nome
-        citta_db.provincia = citta.provincia
+        if citta.nome is not None:
+            citta_db.nome = citta.nome
+        if citta.provincia is not None:
+            citta_db.provincia = citta.provincia
+        if citta.codice_postale is not None:
+            citta_db.codice_postale = citta.codice_postale
         db.commit()
         db.refresh(citta_db)
         return build_citta(citta_db)
@@ -140,5 +146,23 @@ async def delete_citta(citta_id: int) -> dict:
         db.delete(citta_db)
         db.commit()
         return {"message": "Città eliminata con successo"}
+    except Exception as e:
+        raise e
+
+
+async def get_citta_by_zipcode(zipcode: str) -> CittaResponse:
+    """
+    Recupera i dettagli di una città dato il suo CAP.
+    Args:
+        zipcode (str): CAP della città da recuperare
+    Returns:
+        CittaResponse: Dettagli della città
+    """
+    try:
+        db = next(get_db())
+        citta = db.query(Citta).filter(Citta.codice_postale == zipcode).first()
+        if not citta:
+            raise Exception("Città non trovata")
+        return build_citta(citta)
     except Exception as e:
         raise e

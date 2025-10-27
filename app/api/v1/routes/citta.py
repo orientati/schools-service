@@ -1,10 +1,10 @@
 from __future__ import annotations
 
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException
 from fastapi import Query
 
 import app.services.citta as CittaService
-from app.schemas.citta import CittaResponse, CittaList
+from app.schemas.citta import CittaResponse, CittaList, CittaCreate
 
 router = APIRouter()
 
@@ -58,13 +58,32 @@ async def get_citta_by_id(citta_id: int):
         raise e
 
 
+@router.get("/zipcode/{zipcode}", response_model=CittaResponse)
+async def get_citta_by_zipcode(zipcode: str):
+    """
+    Recupera i dettagli di una città dato il suo CAP.
+
+    Args:
+        zipcode (str): CAP della città da recuperare
+
+    Returns:
+        CittaResponse: Dettagli della città
+    """
+    try:
+        return await CittaService.get_citta_by_zipcode(zipcode)
+    except Exception as e:
+        if "Città non trovata" in str(e):
+            return HTTPException(status_code=404, detail="CAP non trovata")
+        raise e
+
+
 @router.post("/", response_model=CittaResponse)
-async def post_citta(citta: CittaResponse):
+async def post_citta(citta: CittaCreate):
     """
     Crea una nuova città.
 
     Args:
-        citta (CittaResponse): Dati della città da creare
+        citta (CittaCreate): Dati della città da creare
 
     Returns:
         CittaResponse: Dettagli della città creata
