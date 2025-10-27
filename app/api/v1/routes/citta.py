@@ -1,8 +1,7 @@
 from __future__ import annotations
 
-from idlelib.query import Query
-
 from fastapi import APIRouter
+from fastapi import Query
 
 import app.services.citta as CittaService
 from app.schemas.citta import CittaResponse, CittaList
