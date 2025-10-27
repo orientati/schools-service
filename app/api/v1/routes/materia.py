@@ -126,3 +126,18 @@ int):
         return await MaterieService.link_materia_to_indirizzo(materia_id, indirizzo_id)
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))  # TODO: da modificare
+
+
+@router.delete("/unlink-indirizzo/{materia_id}/{indirizzo_id}")
+async def unlink_materia_from_indirizzo(materia_id: int, indirizzo_id: int):
+    """
+    Scollega una materia da un indirizzo di studio.
+
+    Args:
+        materia_id (int): ID della materia da scollegare
+        indirizzo_id (int): ID dell'indirizzo di studio da cui scollegare la materia
+    """
+    try:
+        return await MaterieService.unlink_materia_from_indirizzo(materia_id, indirizzo_id)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))  # TODO: da modificare

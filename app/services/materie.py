@@ -159,3 +159,22 @@ async def link_materia_to_indirizzo(materia_id, indirizzo_id):
         return build_materia(materia)
     except Exception as e:
         raise e
+
+
+async def unlink_materia_from_indirizzo(materia_id, indirizzo_id):
+    try:
+        db = next(get_db())
+        materia = db.query(Materia).filter(Materia.id == materia_id).first()
+        if not materia:
+            raise Exception(f"Materia con ID {materia_id} non trovata.")
+        indirizzo = db.query(Indirizzo).filter(Indirizzo.id == indirizzo_id).first()
+        if not indirizzo:
+            raise Exception(f"Indirizzo con ID {indirizzo_id} non trovato.")
+        if indirizzo not in materia.indirizzi:
+            raise Exception(f"Indirizzo con ID {indirizzo_id} non collegato alla materia con ID {materia_id}.")
+        materia.indirizzi.remove(indirizzo)
+        db.commit()
+        db.refresh(materia)
+        return build_materia(materia)
+    except Exception as e:
+        raise e
