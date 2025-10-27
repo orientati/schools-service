@@ -17,10 +17,6 @@ class CittaUpdate(CittaBase):
     pass
 
 
-class CittaDelete(BaseModel):
-    id: int
-
-
 class CittaResponse(CittaBase):
     id: int | None = None
 

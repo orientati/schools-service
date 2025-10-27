@@ -9,11 +9,12 @@ def build_indirizzo(indirizzo: Indirizzo) -> IndirizzoResponse:
     return IndirizzoResponse(
         id=indirizzo.id,
         nome=indirizzo.nome,
-        descrizione=indirizzo.descrizione
+        descrizione=indirizzo.descrizione,
+        id_scuola=indirizzo.id_scuola
     )
 
 
-def get_indirizzi(
+async def get_indirizzi(
         limit: int = 100,
         offset: int = 0,
         search: str | None = None,
@@ -58,7 +59,7 @@ def get_indirizzi(
         raise e
 
 
-def get_indirizzo_by_id(indirizzo_id: int) -> IndirizzoResponse:
+async def get_indirizzo_by_id(indirizzo_id: int) -> IndirizzoResponse:
     """
     Recupera i dettagli di un indirizzo di studio dato il suo ID.
 
@@ -92,7 +93,8 @@ async def post_indirizzo(indirizzo: IndirizzoCreate) -> IndirizzoResponse:
         db = next(get_db())
         new_indirizzo = Indirizzo(
             nome=indirizzo.nome,
-            descrizione=indirizzo.descrizione
+            descrizione=indirizzo.descrizione,
+            id_scuola=indirizzo.id_scuola
         )
         db.add(new_indirizzo)
         db.commit()
@@ -127,7 +129,7 @@ async def put_indirizzo(indirizzo_id: int, indirizzo: IndirizzoUpdate) -> Indiri
         raise e
 
 
-async def delete_indirizzo(indirizzo_id: int) -> None:
+async def delete_indirizzo(indirizzo_id: int):
     """
     Elimina un indirizzo di studio esistente.
 
@@ -141,40 +143,6 @@ async def delete_indirizzo(indirizzo_id: int) -> None:
             raise Exception("Indirizzo non trovato")
         db.delete(indirizzo)
         db.commit()
+        return {"message": "Indirizzo eliminato con successo"}
     except Exception as e:
         raise e
-
-
-def link_indirizzo_to_school(indirizzo_id, school_id):
-    try:
-        db = next(get_db())
-        indirizzo = db.query(Indirizzo).filter(Indirizzo.id == indirizzo_id).first()
-        if not indirizzo:
-            raise Exception(f"Indirizzo con ID {indirizzo_id} non trovato.")
-        school = db.query(Indirizzo).filter(Indirizzo.id == school_id).first()
-        if not school:
-            raise Exception(f"Scuola con ID {school_id} non trovata.")
-        indirizzo.scuole.append(school)
-        db.commit()
-        return build_indirizzo(indirizzo)
-    except Exception as e:
-        raise e
-
-
-async def unlink_indirizzo_from_school(indirizzo_id, school_id):
-    try:
-        db = next(get_db())
-        indirizzo = db.query(Indirizzo).filter(Indirizzo.id == indirizzo_id).first()
-        if not indirizzo:
-            raise Exception(f"Indirizzo con ID {indirizzo_id} non trovato.")
-        school = db.query(Indirizzo).filter(Indirizzo.id == school_id).first()
-        if not school:
-            raise Exception(f"Scuola con ID {school_id} non trovata.")
-        if school not in indirizzo.scuole:
-            raise Exception(f"Scuola con ID {school_id} non collegata all'indirizzo con ID {indirizzo_id}.")
-        indirizzo.scuole.remove(school)
-        db.commit()
-        return build_indirizzo(indirizzo)
-    except Exception as e:
-        raise e
-    

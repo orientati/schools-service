@@ -22,10 +22,6 @@ class MateriaUpdate(MateriaBase):
     pass
 
 
-class MateriaDelete(BaseModel):
-    id: int
-
-
 class MateriaList(BaseModel):
     materie: List[MateriaResponse]
     total: int

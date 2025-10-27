@@ -20,11 +20,7 @@ class IndirizzoCreate(IndirizzoBase):
 
 
 class IndirizzoUpdate(IndirizzoBase):
-    id: int
-
-
-class IndirizzoDelete(BaseModel):
-    id: int
+    pass
 
 
 class IndirizzoList(BaseModel):

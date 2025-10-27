@@ -1,10 +1,10 @@
 from __future__ import annotations
 
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException
 from fastapi import Query
 
 import app.services.indirizzi as IndirizziService
-from app.schemas.indirizzo import IndirizzoList, IndirizzoResponse, IndirizzoCreate, IndirizzoUpdate, IndirizzoDelete
+from app.schemas.indirizzo import IndirizzoList, IndirizzoResponse, IndirizzoCreate, IndirizzoUpdate
 
 router = APIRouter()
 
@@ -48,7 +48,7 @@ async def get_indirizzo_by_id(indirizzo_id: int):
         IndirizzoResponse: Dettagli dell'indirizzo di studio
     """
     try:
-        return IndirizziService.get_indirizzo_by_id(indirizzo_id)
+        return await IndirizziService.get_indirizzo_by_id(indirizzo_id)
     except Exception as e:
         raise e
 
@@ -89,7 +89,7 @@ async def put_indirizzo(indirizzo_id: int, indirizzo: IndirizzoUpdate):
 
 
 @router.delete("/{indirizzo_id}")
-async def delete_indirizzo(indirizzo: IndirizzoDelete):
+async def delete_indirizzo(indirizzo_id: int):
     """
     Elimina un indirizzo di studio esistente.
 
@@ -97,37 +97,6 @@ async def delete_indirizzo(indirizzo: IndirizzoDelete):
         indirizzo_id (int): ID dell'indirizzo di studio da eliminare
     """
     try:
-        return await IndirizziService.delete_indirizzo(indirizzo)
+        return await IndirizziService.delete_indirizzo(indirizzo_id)
     except Exception as e:
-        raise e
-
-
-@router.post("/link-school/{indirizzo_id}/{school_id}")
-async def link_indirizzo_to_school(indirizzo_id: int, school_id: int
-                                   ):
-    """
-    Collega un indirizzo di studio a una scuola.
-
-    Args:
-        indirizzo_id (int): ID dell'indirizzo di studio
-        school_id (int): ID della scuola
-    """
-    try:
-        return await IndirizziService.link_indirizzo_to_school(indirizzo_id, school_id)
-    except Exception as e:
-        raise e
-
-
-@router.post("/unlink-school/{indirizzo_id}/{school_id}")
-async def unlink_indirizzo_from_school(indirizzo_id: int, school_id: int):
-    """
-    Scollega un indirizzo di studio da una scuola.
-
-    Args:
-        indirizzo_id (int): ID dell'indirizzo di studio
-        school_id (int): ID della scuola
-    """
-    try:
-        return await IndirizziService.unlink_indirizzo_from_school(indirizzo_id, school_id)
-    except Exception as e:
-        raise e
+        raise HTTPException(status_code=500, detail=str(e))  # TODO: da modificare
