@@ -20,7 +20,12 @@ async def get_materie(
 ):
     """
     Recupera la lista delle materie, con opzioni di paginazione e filtro.
-
+    Args:
+        limit (int): Numero di materie da restituire (1-100)
+        offset (int): Numero di materie da saltare per la paginazione
+        search (str): Termine di ricerca per filtrare le materie per nome
+        sort_by (str): Campo per ordinamento (es. nome)
+        order (str): Ordine: asc o desc
 
     Returns:
         MateriaList: Lista delle materie con metadati di paginazione
