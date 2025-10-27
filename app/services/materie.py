@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from app.api.deps import get_db
-from app.models import Materia
+from app.models import Materia, Indirizzo
 from app.schemas.materia import MateriaList, MateriaResponse, MateriaUpdate
 
 
@@ -126,28 +126,33 @@ async def update_materia(materia_id: int, materia_data: MateriaUpdate) -> Materi
         raise e
 
 
-def delete_materia(materia_id):
+async def delete_materia(materia_id):
     try:
         db = next(get_db())
         materia = db.query(Materia).filter(Materia.id == materia_id).first()
         if not materia:
             raise Exception(f"Materia con ID {materia_id} non trovata.")
+        if materia.indirizzi:
+            raise Exception(
+                f"Impossibile eliminare la materia con ID {materia_id} perché collegata a uno o più indirizzi di studio.")
         db.delete(materia)
         db.commit()
-        return build_materia(materia)
+        return {"message": f"Materia {materia_id} eliminata con successo."}
     except Exception as e:
         raise e
 
 
-def link_materia_to_indirizzo(materia_id, indirizzo_id):
+async def link_materia_to_indirizzo(materia_id, indirizzo_id):
     try:
         db = next(get_db())
         materia = db.query(Materia).filter(Materia.id == materia_id).first()
         if not materia:
             raise Exception(f"Materia con ID {materia_id} non trovata.")
-        indirizzo = db.query(Materia).filter(Materia.id == indirizzo_id).first()
+        indirizzo = db.query(Indirizzo).filter(Indirizzo.id == indirizzo_id).first()
         if not indirizzo:
             raise Exception(f"Indirizzo con ID {indirizzo_id} non trovato.")
+        if indirizzo in materia.indirizzi:
+            raise Exception(f"Indirizzo con ID {indirizzo_id} già collegato alla materia con ID {materia_id}.")
         materia.indirizzi.append(indirizzo)
         db.commit()
         db.refresh(materia)
