@@ -28,7 +28,7 @@ class IndirizzoDelete(BaseModel):
 
 
 class IndirizzoList(BaseModel):
-    indirizzi: List[IndirizzoCreate]
+    indirizzi: List[IndirizzoResponse]
     total: int
     offset: int
     limit: int
