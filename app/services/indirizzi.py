@@ -159,3 +159,22 @@ def link_indirizzo_to_school(indirizzo_id, school_id):
         return build_indirizzo(indirizzo)
     except Exception as e:
         raise e
+
+
+async def unlink_indirizzo_from_school(indirizzo_id, school_id):
+    try:
+        db = next(get_db())
+        indirizzo = db.query(Indirizzo).filter(Indirizzo.id == indirizzo_id).first()
+        if not indirizzo:
+            raise Exception(f"Indirizzo con ID {indirizzo_id} non trovato.")
+        school = db.query(Indirizzo).filter(Indirizzo.id == school_id).first()
+        if not school:
+            raise Exception(f"Scuola con ID {school_id} non trovata.")
+        if school not in indirizzo.scuole:
+            raise Exception(f"Scuola con ID {school_id} non collegata all'indirizzo con ID {indirizzo_id}.")
+        indirizzo.scuole.remove(school)
+        db.commit()
+        return build_indirizzo(indirizzo)
+    except Exception as e:
+        raise e
+    

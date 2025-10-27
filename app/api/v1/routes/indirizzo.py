@@ -116,4 +116,18 @@ async def link_indirizzo_to_school(indirizzo_id: int, school_id: int
         return await IndirizziService.link_indirizzo_to_school(indirizzo_id, school_id)
     except Exception as e:
         raise e
-    
+
+
+@router.post("/unlink-school/{indirizzo_id}/{school_id}")
+async def unlink_indirizzo_from_school(indirizzo_id: int, school_id: int):
+    """
+    Scollega un indirizzo di studio da una scuola.
+
+    Args:
+        indirizzo_id (int): ID dell'indirizzo di studio
+        school_id (int): ID della scuola
+    """
+    try:
+        return await IndirizziService.unlink_indirizzo_from_school(indirizzo_id, school_id)
+    except Exception as e:
+        raise e
