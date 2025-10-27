@@ -3,7 +3,7 @@ from __future__ import annotations
 from fastapi import APIRouter
 from fastapi import Query
 
-from app.schemas.materia import MateriaResponse, MateriaList, MateriaUpdate
+from app.schemas.materia import MateriaResponse, MateriaList, MateriaUpdate, MateriaCreate
 from app.services import materie as MaterieService
 
 router = APIRouter()
@@ -100,7 +100,10 @@ async def delete_materia(materia_id: int):
     Returns:
         MateriaResponse: Dettagli della materia eliminata
     """
-    pass
+    try:
+        return await MaterieService.delete_materia(materia_id)
+    except Exception as e:
+        raise e
 
 
 @router.post("/link-indirizzo/{materia_id}/{indirizzo_id}")
@@ -113,4 +116,7 @@ int):
         materia_id (int): ID della materia da collegare
         indirizzo_id (int): ID dell'indirizzo di studio a cui collegare la materia
     """
-    pass
+    try:
+        return await MaterieService.link_materia_to_indirizzo(materia_id, indirizzo_id)
+    except Exception as e:
+        raise e

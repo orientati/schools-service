@@ -124,3 +124,33 @@ async def update_materia(materia_id: int, materia_data: MateriaUpdate) -> Materi
         return build_materia(materia)
     except Exception as e:
         raise e
+
+
+def delete_materia(materia_id):
+    try:
+        db = next(get_db())
+        materia = db.query(Materia).filter(Materia.id == materia_id).first()
+        if not materia:
+            raise Exception(f"Materia con ID {materia_id} non trovata.")
+        db.delete(materia)
+        db.commit()
+        return build_materia(materia)
+    except Exception as e:
+        raise e
+
+
+def link_materia_to_indirizzo(materia_id, indirizzo_id):
+    try:
+        db = next(get_db())
+        materia = db.query(Materia).filter(Materia.id == materia_id).first()
+        if not materia:
+            raise Exception(f"Materia con ID {materia_id} non trovata.")
+        indirizzo = db.query(Materia).filter(Materia.id == indirizzo_id).first()
+        if not indirizzo:
+            raise Exception(f"Indirizzo con ID {indirizzo_id} non trovato.")
+        materia.indirizzi.append(indirizzo)
+        db.commit()
+        db.refresh(materia)
+        return build_materia(materia)
+    except Exception as e:
+        raise e
