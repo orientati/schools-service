@@ -107,7 +107,8 @@ async def delete_materia(materia_id: int):
         MateriaResponse: Dettagli della materia eliminata
     """
     try:
-        return await MaterieService.delete_materia(materia_id)
+        return await MaterieService.delete_materia(
+            materia_id)  # TODO: aggiungere la gestione dell'errore se la materia non esiste
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))  # TODO: da modificare
 
