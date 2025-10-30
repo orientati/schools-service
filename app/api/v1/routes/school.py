@@ -2,13 +2,13 @@ from __future__ import annotations
 
 from typing import Optional
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter
 from fastapi import Query
+from fastapi.responses import JSONResponse
 
-from app.schemas.school import SchoolsList, SchoolResponse, SchoolCreate, SchoolDeleteResponse
+from app.schemas.school import SchoolsList, SchoolResponse, SchoolCreate, SchoolDeleteResponse, SchoolUpdate
 from app.services import school as school_service
 from app.services.http_client import OrientatiException
-from fastapi.responses import JSONResponse
 
 router = APIRouter()
 
@@ -102,19 +102,19 @@ async def post_school(school: SchoolCreate) -> SchoolResponse:
             }
         )
 
+
 @router.put("/{school_id}", response_model=SchoolResponse)
-async def put_school(school_id: int, school: SchoolCreate) -> SchoolResponse:
+async def put_school(school_id: int, school: SchoolUpdate) -> SchoolResponse:
     """
     Aggiorna i dettagli di una scuola esistente.
     Args:
         school_id (int): ID della scuola da aggiornare.
-        school (SchoolCreate): Dati aggiornati della scuola.
+        school (SchoolUpdate): Dati aggiornati della scuola.
     Returns:
         SchoolResponse: Dettagli della scuola aggiornata.
     """
     try:
-        update_data = school.dict(exclude_unset=True)
-        return await school_service.update_school(school_id, update_data)
+        return await school_service.update_school(school_id, school.model_dump())
     except OrientatiException as e:
         return JSONResponse(
             status_code=e.status_code,
@@ -124,6 +124,7 @@ async def put_school(school_id: int, school: SchoolCreate) -> SchoolResponse:
                 "url": e.url
             }
         )
+
 
 @router.delete("/{school_id}", response_model=SchoolDeleteResponse)
 async def delete_school(school_id: int) -> SchoolDeleteResponse:
