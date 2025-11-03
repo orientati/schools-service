@@ -91,6 +91,18 @@ async def post_indirizzo(indirizzo: IndirizzoCreate) -> IndirizzoResponse:
     """
     try:
         db = next(get_db())
+
+        scuola = db.query(Indirizzo).filter(Indirizzo.id_scuola == indirizzo.id_scuola).first()
+        if not scuola:
+            raise Exception("Scuola non trovata")
+
+        existing_indirizzo = db.query(Indirizzo).filter(
+            Indirizzo.nome == indirizzo.nome,
+            Indirizzo.id_scuola == indirizzo.id_scuola
+        ).first()
+        if existing_indirizzo:
+            raise Exception("Indirizzo già esistente per questa scuola")
+
         new_indirizzo = Indirizzo(
             nome=indirizzo.nome,
             descrizione=indirizzo.descrizione,
