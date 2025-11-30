@@ -20,15 +20,11 @@ class IndirizzoCreate(IndirizzoBase):
 
 
 class IndirizzoUpdate(IndirizzoBase):
-    id: int
-
-
-class IndirizzoDelete(BaseModel):
-    id: int
+    pass
 
 
 class IndirizzoList(BaseModel):
-    indirizzi: List[IndirizzoCreate]
+    indirizzi: List[IndirizzoResponse]
     total: int
     offset: int
     limit: int

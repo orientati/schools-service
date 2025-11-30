@@ -14,11 +14,7 @@ class CittaCreate(CittaBase):
 
 
 class CittaUpdate(CittaBase):
-    id: int
-
-
-class CittaDelete(BaseModel):
-    id: int
+    pass
 
 
 class CittaResponse(CittaBase):
