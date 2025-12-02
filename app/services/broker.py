@@ -1,8 +1,8 @@
 from __future__ import annotations
 
-import asyncio
 import json
-
+import asyncio
+import uuid
 import aio_pika
 
 from app.core.config import settings
@@ -115,7 +115,11 @@ class AsyncBrokerSingleton:
         """
         exchange = await self.channel.declare_exchange(exchange_name, "direct", durable=True)
         message = aio_pika.Message(
-            body=json.dumps({"type": msg_type, "data": data}).encode("utf-8"),
+            body=json.dumps({
+                "id": str(uuid.uuid4()),
+                "type": msg_type,
+                "data": data
+            }).encode("utf-8"),
             content_type="application/json",
             delivery_mode=aio_pika.DeliveryMode.PERSISTENT
         )
