@@ -11,6 +11,8 @@ services:
   schools-service:
     build: .
     env_file: .env
+    ports:
+      - "8000:8000"
 
   schools-service_db:
     ports:

@@ -1,13 +1,13 @@
 from __future__ import annotations
 
+import sys
 from contextlib import asynccontextmanager
 
 import sentry_sdk
-import sys
 from fastapi import FastAPI, APIRouter
 from fastapi.responses import ORJSONResponse
 
-from app.api.v1.routes import template
+from app.api.v1.routes import school, indirizzo, materia, citta
 from app.core.config import settings
 from app.core.logging import setup_logging, get_logger
 from app.db.base import import_models
@@ -23,15 +23,18 @@ sentry_sdk.init(
 
 logger = None
 
+
 # RabbitMQ Broker
 async def callback(message):
     async with message.process():
-        print(f"Received message from exchange '{message.exchange}' with routing key '{message.routing_key}': {message.body.decode()}")
+        print(
+            f"Received message from exchange '{message.exchange}' with routing key '{message.routing_key}': {message.body.decode()}")
+
 
 exchanges = {
-    "users": callback,
-    "banana": callback
+    "schools": callback
 }
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -42,7 +45,7 @@ async def lifespan(app: FastAPI):
     # Avvia il broker asincrono all'avvio dell'app
     broker_instance = broker.AsyncBrokerSingleton()
     connected = await broker_instance.connect()
-    if(not connected):
+    if (not connected):
         logger.error("Could not connect to RabbitMQ. Exiting...")
         sys.exit(1)
         return
@@ -57,6 +60,7 @@ async def lifespan(app: FastAPI):
     logger.info(f"Shutting down {settings.SERVICE_NAME}...")
     await broker_instance.close()
     logger.info("RabbitMQ connection closed.")
+
 
 docs_url = None if settings.ENVIRONMENT == "production" else "/docs"
 redoc_url = None if settings.ENVIRONMENT == "production" else "/redoc"
@@ -74,12 +78,29 @@ app = FastAPI(
 current_router = APIRouter()
 
 current_router.include_router(
-    prefix="/template",
-    tags=[settings.SERVICE_NAME, "template"],
-    router=template.router,
+    prefix="/schools",
+    tags=[settings.SERVICE_NAME, "schools"],
+    router=school.router,
 )
 
+current_router.include_router(
+    prefix="/indirizzi",
+    tags=[settings.SERVICE_NAME, "indirizzi"],
+    router=indirizzo.router,
+)
+current_router.include_router(
+    prefix="/materie",
+    tags=[settings.SERVICE_NAME, "materie"],
+    router=materia.router,
+)
+current_router.include_router(
+    prefix="/citta",
+    tags=[settings.SERVICE_NAME, "citta"],
+    router=citta.router,
+)
+    
 app.include_router(current_router, prefix=settings.API_PREFIX)
+
 
 @app.get("/health", tags=["health"])
 def health():

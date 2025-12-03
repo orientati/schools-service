@@ -2,7 +2,7 @@ from pydantic_settings import SettingsConfigDict, BaseSettings
 
 
 class Settings(BaseSettings):
-    SERVICE_NAME: str = "Servizio Template"
+    SERVICE_NAME: str = "Schools Service"
     SERVICE_VERSION: str = "0.1.0"
     DATABASE_URL: str = "sqlite:///./database.db"
     RABBITMQ_HOST: str = "localhost"
@@ -18,7 +18,7 @@ class Settings(BaseSettings):
 
     model_config = SettingsConfigDict(
         env_file=".env",
-        env_prefix="TEMPLATE_"  # Prefisso di tutte le variabili (es. TEMPLATE_DATABASE_URL)
+        env_prefix="SCHOOLS_"  # Prefisso di tutte le variabili (es. TEMPLATE_DATABASE_URL)
     )
 
 settings = Settings()
