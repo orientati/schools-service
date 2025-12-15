@@ -8,17 +8,20 @@ class Settings(BaseSettings):
     RABBITMQ_HOST: str = "localhost"
     RABBITMQ_PORT: int = 5672
     RABBITMQ_USER: str = "guest"
+    RABBITMQ_CONNECTION_RETRIES: int = 5
+    RABBITMQ_CONNECTION_RETRY_DELAY: int = 5
     RABBITMQ_PASS: str = "guest"
+
     SERVICE_PORT: int = 8000
     ENVIRONMENT: str = "development"
     SENTRY_DSN: str = ""
     SENTRY_RELEASE: str = "0.1.0"
     API_PREFIX: str = "/api/v1"
 
-
     model_config = SettingsConfigDict(
         env_file=".env",
         env_prefix="SCHOOLS_"  # Prefisso di tutte le variabili (es. TEMPLATE_DATABASE_URL)
     )
+
 
 settings = Settings()
