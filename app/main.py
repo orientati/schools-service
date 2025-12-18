@@ -8,7 +8,11 @@ import sentry_sdk
 from fastapi import FastAPI, APIRouter
 from fastapi.responses import ORJSONResponse
 
+<<<<<<< HEAD
 from app.api.v1.routes import school, indirizzo, materia, citta
+=======
+from app.api.v1.routes import school, citta, indirizzo, materia
+>>>>>>> 1804c8e (Refactor: Async services/routes restoration and RabbitMQ fix)
 from app.core.config import settings
 from app.core.logging import setup_logging, get_logger
 from app.db.base import import_models
@@ -93,6 +97,7 @@ current_router.include_router(
 )
 
 current_router.include_router(
+<<<<<<< HEAD
     prefix="/indirizzi",
     tags=[settings.SERVICE_NAME, "indirizzi"],
     router=indirizzo.router,
@@ -108,6 +113,25 @@ current_router.include_router(
     router=citta.router,
 )
 
+=======
+    prefix="/citta",
+    tags=["citta"],
+    router=citta.router,
+)
+
+current_router.include_router(
+    prefix="/indirizzi",
+    tags=["indirizzi"],
+    router=indirizzo.router,
+)
+
+current_router.include_router(
+    prefix="/materie",
+    tags=["materie"],
+    router=materia.router,
+)
+
+>>>>>>> 1804c8e (Refactor: Async services/routes restoration and RabbitMQ fix)
 app.include_router(current_router, prefix=settings.API_PREFIX)
 
 

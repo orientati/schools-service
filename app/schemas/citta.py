@@ -1,28 +1,28 @@
-from __future__ import annotations
-
 from pydantic import BaseModel
+from typing import Optional, List
 
-
-class CittaBase(BaseModel):  # indirizzo di studio
+class CittaBase(BaseModel):
     nome: str
-    provincia: str | None = None
-    codice_postale: str | None = None
-
+    cap: str
+    provincia: str
+    regione: str
 
 class CittaCreate(CittaBase):
     pass
 
-
 class CittaUpdate(CittaBase):
     pass
 
-
 class CittaResponse(CittaBase):
-    id: int | None = None
-
+    id: int
+    class Config:
+        from_attributes = True
 
 class CittaList(BaseModel):
-    citta: list[CittaResponse]
     total: int
     limit: int
     offset: int
+    citta: List[CittaResponse]
+    filter_search: Optional[str] = None
+    sort_by: Optional[str] = None
+    order: Optional[str] = None
