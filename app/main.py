@@ -8,7 +8,7 @@ import sentry_sdk
 from fastapi import FastAPI, APIRouter
 from fastapi.responses import ORJSONResponse
 
-from app.api.v1.routes import school, indirizzo, materia, citta
+from app.api.v1.routes import school, citta, indirizzo, materia
 from app.core.config import settings
 from app.core.logging import setup_logging, get_logger
 from app.db.base import import_models
@@ -93,21 +93,22 @@ current_router.include_router(
 )
 
 current_router.include_router(
-    prefix="/indirizzi",
-    tags=[settings.SERVICE_NAME, "indirizzi"],
-    router=indirizzo.router,
-)
-current_router.include_router(
-    prefix="/materie",
-    tags=[settings.SERVICE_NAME, "materie"],
-    router=materia.router,
-)
-current_router.include_router(
     prefix="/citta",
     tags=[settings.SERVICE_NAME, "citta"],
     router=citta.router,
 )
 
+current_router.include_router(
+    prefix="/indirizzi",
+    tags=[settings.SERVICE_NAME, "indirizzi"],
+    router=indirizzo.router,
+)
+
+current_router.include_router(
+    prefix="/materie",
+    tags=[settings.SERVICE_NAME, "materie"],
+    router=materia.router,
+)
 app.include_router(current_router, prefix=settings.API_PREFIX)
 
 

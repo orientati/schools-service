@@ -2,10 +2,12 @@ from __future__ import annotations
 
 from typing import Optional
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 from fastapi import Query
 from fastapi.responses import JSONResponse
+from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.api.deps import get_db
 from app.schemas.school import SchoolsList, SchoolResponse, SchoolCreate, SchoolDeleteResponse, SchoolUpdate
 from app.services import school as school_service
 from app.services.http_client import OrientatiException
@@ -24,7 +26,8 @@ async def get_schools(
         indirizzo: Optional[str] = Query(default=None,
                                          description="Filtra per tipo di scuola (es. Liceo, informatico, ecc.)"),
         sort_by: str = Query(default="name", description="Campo per ordinamento (es. nome, città, provincia)"),
-        order: str = Query(default="asc", regex="^(asc|desc)$", description="Ordine: asc o desc")
+        order: str = Query(default="asc", regex="^(asc|desc)$", description="Ordine: asc o desc"),
+        db: AsyncSession = Depends(get_db)
 ):
     """
     Recupera la lista delle scuole con opzioni di paginazione e filtro.
@@ -34,6 +37,7 @@ async def get_schools(
     """
     try:
         return await school_service.get_schools(
+            db=db,
             limit=limit,
             offset=offset,
             search=search,
@@ -56,7 +60,7 @@ async def get_schools(
 
 
 @router.get("/{school_id}", response_model=SchoolResponse)
-async def get_school_by_id(school_id: int) -> SchoolResponse:
+async def get_school_by_id(school_id: int, db: AsyncSession = Depends(get_db)) -> SchoolResponse:
     """
     Recupera i dettagli di una scuola dato il suo ID.
 
@@ -67,7 +71,7 @@ async def get_school_by_id(school_id: int) -> SchoolResponse:
         SchoolResponse: Dettagli della scuola.
     """
     try:
-        return await school_service.get_school_by_id(school_id)
+        return await school_service.get_school_by_id(school_id, db)
     except OrientatiException as e:
         return JSONResponse(
             status_code=e.status_code,
@@ -80,7 +84,7 @@ async def get_school_by_id(school_id: int) -> SchoolResponse:
 
 
 @router.post("/", response_model=SchoolResponse)
-async def post_school(school: SchoolCreate) -> SchoolResponse:
+async def post_school(school: SchoolCreate, db: AsyncSession = Depends(get_db)) -> SchoolResponse:
     """
     Crea una nuova scuola.
     Args:
@@ -89,7 +93,7 @@ async def post_school(school: SchoolCreate) -> SchoolResponse:
         SchoolResponse: Dettagli della scuola creata.
     """
     try:
-        scuola = await school_service.create_school(school)
+        scuola = await school_service.create_school(school, db)
         print(scuola)
         return scuola
     except OrientatiException as e:
@@ -104,7 +108,7 @@ async def post_school(school: SchoolCreate) -> SchoolResponse:
 
 
 @router.put("/{school_id}", response_model=SchoolResponse)
-async def put_school(school_id: int, school: SchoolUpdate) -> SchoolResponse:
+async def put_school(school_id: int, school: SchoolUpdate, db: AsyncSession = Depends(get_db)) -> SchoolResponse:
     """
     Aggiorna i dettagli di una scuola esistente.
     Args:
@@ -114,7 +118,7 @@ async def put_school(school_id: int, school: SchoolUpdate) -> SchoolResponse:
         SchoolResponse: Dettagli della scuola aggiornata.
     """
     try:
-        return await school_service.update_school(school_id, school.model_dump())
+        return await school_service.update_school(school_id, school.model_dump(), db)
     except OrientatiException as e:
         return JSONResponse(
             status_code=e.status_code,
@@ -127,7 +131,7 @@ async def put_school(school_id: int, school: SchoolUpdate) -> SchoolResponse:
 
 
 @router.delete("/{school_id}", response_model=SchoolDeleteResponse)
-async def delete_school(school_id: int) -> SchoolDeleteResponse:
+async def delete_school(school_id: int, db: AsyncSession = Depends(get_db)) -> SchoolDeleteResponse:
     """
     Elimina una scuola esistente.
     Args:
@@ -136,7 +140,7 @@ async def delete_school(school_id: int) -> SchoolDeleteResponse:
         SchoolDeleteResponse: Conferma dell'eliminazione della scuola.
     """
     try:
-        return await school_service.delete_school(school_id)
+        return await school_service.delete_school(school_id, db)
     except OrientatiException as e:
         return JSONResponse(
             status_code=e.status_code,

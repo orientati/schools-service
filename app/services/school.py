@@ -2,8 +2,12 @@ from __future__ import annotations
 
 from typing import Optional
 
+from sqlalchemy import select, func, asc, desc
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import joinedload, selectinload
+
 from app.api.deps import get_db
-from app.models import Scuola, Citta
+from app.models import Scuola, Citta, Indirizzo
 from app.schemas.school import SchoolsList, SchoolResponse, SchoolAddress, SchoolCreate, SchoolDeleteResponse
 from app.services.http_client import OrientatiException
 
@@ -36,6 +40,7 @@ def build_school(scuola: Scuola) -> SchoolResponse:
 
 
 async def get_schools(
+        db: AsyncSession,
         limit: int = 10,
         offset: int = 0,
         search: Optional[str] = None,
@@ -50,6 +55,7 @@ async def get_schools(
     Recupera la lista delle scuole con opzioni di paginazione e filtro.
 
     Args:
+        db (AsyncSession): Sessione del database.
         limit (int): Numero massimo di scuole da restituire.
         offset (int): Numero di scuole da saltare per la paginazione.
         search (Optional[str]): Termine di ricerca per filtrare le scuole per nome.
@@ -64,8 +70,11 @@ async def get_schools(
         SchoolsList: Lista delle scuole con metadati di paginazione.
     """
     try:
-        db = next(get_db())
-        query = db.query(Scuola).join(Scuola.citta)
+        query = select(Scuola).join(Scuola.citta).options(
+            joinedload(Scuola.citta),
+            selectinload(Scuola.indirizzi).selectinload(Indirizzo.materie)
+        )
+        
         # applico i filtri
         if search:
             query = query.filter(Scuola.nome.ilike(f"%{search}%"))
@@ -77,17 +86,38 @@ async def get_schools(
             query = query.filter(Citta.provincia == provincia)
         if indirizzo:
             query = query.filter(Scuola.indirizzo.ilike(f"%{indirizzo}%"))
+            
         # applico l'ordinamento
         sort_column = {
             "name": Scuola.nome,
-            "citta": Scuola.citta.has(),
-            "provincia": Scuola.citta.has()
+            "citta": Citta.nome,
+            "provincia": Citta.provincia
         }.get(sort_by, Scuola.nome)
+        
         if order == "desc":
-            sort_column = sort_column.desc()
-        query = query.order_by(sort_column)
-        total = query.count()
-        scuole = query.offset(offset).limit(limit).all()
+            query = query.order_by(desc(sort_column))
+        else:
+            query = query.order_by(asc(sort_column))
+        
+        # Count query
+        count_query = select(func.count()).select_from(Scuola).join(Scuola.citta)
+        # Re-apply filters for count
+        if search:
+            count_query = count_query.filter(Scuola.nome.ilike(f"%{search}%"))
+        if tipo:
+            count_query = count_query.filter(Scuola.tipo == tipo)
+        if citta:
+            count_query = count_query.filter(Citta.nome == citta)
+        if provincia:
+            count_query = count_query.filter(Citta.provincia == provincia)
+        if indirizzo:
+            count_query = count_query.filter(Scuola.indirizzo.ilike(f"%{indirizzo}%"))
+
+        total_result = await db.execute(count_query)
+        total = total_result.scalar()
+
+        result = await db.execute(query.offset(offset).limit(limit))
+        scuole = result.scalars().all()
 
         return SchoolsList(
             total=total,
@@ -109,19 +139,25 @@ async def get_schools(
         )
 
 
-async def get_school_by_id(school_id: int):
+async def get_school_by_id(school_id: int, db: AsyncSession):
     """
     Recupera una scuola per ID.
 
     Args:
         school_id (int): ID della scuola da recuperare.
+        db (AsyncSession): Sessione DB.
 
     Returns:
         SchoolResponse: Dettagli della scuola.
     """
     try:
-        db = next(get_db())
-        scuola = db.query(Scuola).filter(Scuola.id == school_id).first()
+        stmt = select(Scuola).where(Scuola.id == school_id).options(
+            joinedload(Scuola.citta),
+            selectinload(Scuola.indirizzi).selectinload(Indirizzo.materie)
+        )
+        result = await db.execute(stmt)
+        scuola = result.scalars().first()
+        
         if not scuola:
             return None
 
@@ -134,19 +170,21 @@ async def get_school_by_id(school_id: int):
         )
 
 
-async def create_school(school: SchoolCreate) -> SchoolResponse:
+async def create_school(school: SchoolCreate, db: AsyncSession) -> SchoolResponse:
     """
     Crea una nuova scuola.
 
     Args:
         school (SchoolCreate): Dati della scuola da creare.
+        db (AsyncSession): Sessione DB.
 
     Returns:
         SchoolResponse: Dettagli della scuola creata.
     """
     try:
-        db = next(get_db())
-        citta = db.query(Citta).filter(Citta.id == school.citta_id).first()
+        stmt = select(Citta).filter(Citta.id == school.citta_id)
+        result = await db.execute(stmt)
+        citta = result.scalars().first()
 
         if not citta:
             raise OrientatiException(
@@ -167,10 +205,11 @@ async def create_school(school: SchoolCreate) -> SchoolResponse:
             descrizione=school.descrizione
         )
         db.add(nuova_scuola)
-        db.commit()
-        db.refresh(nuova_scuola)
-
-        return build_school(nuova_scuola)
+        await db.commit()
+        await db.refresh(nuova_scuola)
+        
+        # Re-fetch with relationships for response building
+        return await get_school_by_id(nuova_scuola.id, db)
 
     except OrientatiException as e:
         raise e
@@ -196,20 +235,22 @@ def find_key(data: dict, target_key: str):
     return False
 
 
-async def update_school(school_id: int, school: dict) -> SchoolResponse:
+async def update_school(school_id: int, school: dict, db: AsyncSession) -> SchoolResponse:
     """
     Aggiorna una scuola esistente.
 
     Args:
         school_id (int): ID della scuola da aggiornare.
         school (dict): Dati aggiornati della scuola.
+        db (AsyncSession): Sessione DB.
 
     Returns:
         SchoolResponse: Dettagli della scuola aggiornata.
     """
     try:
-        db = next(get_db())
-        scuola = db.query(Scuola).filter(Scuola.id == school_id).first()
+        stmt = select(Scuola).where(Scuola.id == school_id)
+        result = await db.execute(stmt)
+        scuola = result.scalars().first()
 
         if not scuola:
             raise OrientatiException(
@@ -231,7 +272,9 @@ async def update_school(school_id: int, school: dict) -> SchoolResponse:
         id_citta = school.get("citta_id", None)
         citta = None
         if id_citta is not None:
-            citta = db.query(Citta).filter(Citta.id == school.get("citta_id", None)).first()
+            stmt_citta = select(Citta).filter(Citta.id == school.get("citta_id", None))
+            result_citta = await db.execute(stmt_citta)
+            citta = result_citta.scalars().first()
 
             if not citta:
                 raise OrientatiException(
@@ -240,6 +283,7 @@ async def update_school(school_id: int, school: dict) -> SchoolResponse:
                     message="Not Found",
                     details={"message": "City Not Found"}
                 )
+        
         scuola.nome = school["nome"] if find_key(school, "nome") and school.get("nome",
                                                                                 None) is not None else scuola.nome
         scuola.tipo = school["tipo"] if find_key(school, "tipo") and school.get("tipo",
@@ -254,10 +298,11 @@ async def update_school(school_id: int, school: dict) -> SchoolResponse:
         scuola.sito_web = school["sito_web"] if find_key(school, "sito_web") else scuola.sito_web
         scuola.descrizione = school["descrizione"] if find_key(school, "descrizione") else scuola.descrizione
 
-        db.commit()
-        db.refresh(scuola)
+        await db.commit()
+        await db.refresh(scuola)
 
-        return build_school(scuola)
+        # Re-fetch for proper response with relations
+        return await get_school_by_id(school_id, db)
 
     except OrientatiException as e:
         raise e
@@ -268,19 +313,21 @@ async def update_school(school_id: int, school: dict) -> SchoolResponse:
         )
 
 
-async def delete_school(school_id: int) -> SchoolDeleteResponse:
+async def delete_school(school_id: int, db: AsyncSession) -> SchoolDeleteResponse:
     """
     Elimina una scuola esistente.
 
     Args:
         school_id (int): ID della scuola da eliminare.
+        db (AsyncSession): Sessione DB.
 
     Returns:
         bool: True se la scuola è stata eliminata con successo, False altrimenti.
     """
     try:
-        db = next(get_db())
-        scuola = db.query(Scuola).filter(Scuola.id == school_id).first()
+        stmt = select(Scuola).where(Scuola.id == school_id)
+        result = await db.execute(stmt)
+        scuola = result.scalars().first()
 
         if not scuola:
             raise OrientatiException(
@@ -290,8 +337,8 @@ async def delete_school(school_id: int) -> SchoolDeleteResponse:
                 details={"message": "School Not Found"}
             )
 
-        db.delete(scuola)
-        db.commit()
+        await db.delete(scuola)
+        await db.commit()
 
         return SchoolDeleteResponse()
 
