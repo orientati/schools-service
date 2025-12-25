@@ -7,7 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload, selectinload
 
 from app.api.deps import get_db
-from app.models import Scuola, Citta
+from app.models import Scuola, Citta, Indirizzo
 from app.schemas.school import SchoolsList, SchoolResponse, SchoolAddress, SchoolCreate, SchoolDeleteResponse
 from app.services.http_client import OrientatiException
 
@@ -72,7 +72,7 @@ async def get_schools(
     try:
         query = select(Scuola).join(Scuola.citta).options(
             joinedload(Scuola.citta),
-            selectinload(Scuola.indirizzi).selectinload("materie")
+            selectinload(Scuola.indirizzi).selectinload(Indirizzo.materie)
         )
         
         # applico i filtri
@@ -153,7 +153,7 @@ async def get_school_by_id(school_id: int, db: AsyncSession):
     try:
         stmt = select(Scuola).where(Scuola.id == school_id).options(
             joinedload(Scuola.citta),
-            selectinload(Scuola.indirizzi).selectinload("materie")
+            selectinload(Scuola.indirizzi).selectinload(Indirizzo.materie)
         )
         result = await db.execute(stmt)
         scuola = result.scalars().first()
