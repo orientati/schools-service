@@ -44,30 +44,32 @@ async def lifespan(app: FastAPI):
     logger.info(f"Starting {settings.SERVICE_NAME}...")
 
     # Avvia il broker asincrono all'avvio dell'app
-    broker_instance = broker.AsyncBrokerSingleton()
-    connected = False
-    for i in range(settings.RABBITMQ_CONNECTION_RETRIES):
-        logger.info(f"Connecting to RabbitMQ (attempt {i + 1}/{settings.RABBITMQ_CONNECTION_RETRIES})...")
-        connected = await broker_instance.connect()
-        if connected:
-            break
-        logger.warning(
-            f"Failed to connect to RabbitMQ. Retrying in {settings.RABBITMQ_CONNECTION_RETRY_DELAY} seconds...")
-        await asyncio.sleep(settings.RABBITMQ_CONNECTION_RETRY_DELAY)
+    if settings.ENVIRONMENT != "testing":
+        broker_instance = broker.AsyncBrokerSingleton()
+        connected = False
+        for i in range(settings.RABBITMQ_CONNECTION_RETRIES):
+            logger.info(f"Connecting to RabbitMQ (attempt {i + 1}/{settings.RABBITMQ_CONNECTION_RETRIES})...")
+            connected = await broker_instance.connect()
+            if connected:
+                break
+            logger.warning(
+                f"Failed to connect to RabbitMQ. Retrying in {settings.RABBITMQ_CONNECTION_RETRY_DELAY} seconds...")
+            await asyncio.sleep(settings.RABBITMQ_CONNECTION_RETRY_DELAY)
 
-    if not connected:
-        logger.error("Could not connect to RabbitMQ after multiple attempts. Exiting...")
-        sys.exit(1)
-
-    else:
-        logger.info("Connected to RabbitMQ.")
-        for exchange, cb in exchanges.items():
-            await broker_instance.subscribe(exchange, cb)
+        if not connected:
+            logger.error("Could not connect to RabbitMQ after multiple attempts. Exiting...")
+            sys.exit(1)
+        
+        else:
+            logger.info("Connected to RabbitMQ.")
+            for exchange, cb in exchanges.items():
+                await broker_instance.subscribe(exchange, cb)
 
     yield
 
     logger.info(f"Shutting down {settings.SERVICE_NAME}...")
-    await broker_instance.close()
+    if settings.ENVIRONMENT != "testing":
+        await broker_instance.close()
     logger.info("RabbitMQ connection closed.")
 
 
