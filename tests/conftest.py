@@ -4,9 +4,14 @@ from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
 
-from app.api.deps import get_db
 from app.db.base import Base
+from app.api.deps import get_db
+import os
+os.environ["SCHOOLS_ENVIRONMENT"] = "testing"
 from app.main import app
+from app.core.config import settings
+settings.ENVIRONMENT = "testing"
+from unittest.mock import patch, AsyncMock
 
 # DB in memoria per i test (aiosqlite)
 SQLALCHEMY_DATABASE_URL = "sqlite+aiosqlite:///:memory:"
@@ -26,6 +31,15 @@ TestingSessionLocal = sessionmaker(
 @pytest.fixture(scope="session")
 def anyio_backend():
     return "asyncio"
+
+@pytest.fixture(scope="session", autouse=True)
+def mock_broker():
+    with patch("app.services.broker.AsyncBrokerSingleton") as MockBroker:
+        instance = MockBroker.return_value
+        instance.connect = AsyncMock(return_value=True)
+        instance.subscribe = AsyncMock()
+        instance.close = AsyncMock()
+        yield instance
 
 @pytest.fixture(scope="function")
 async def db_session():

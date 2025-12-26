@@ -13,7 +13,7 @@ async def get_citta(
         offset: int = Query(default=0, ge=0),
         search: str = Query(default=None),
         sort_by: str = Query(default=None),
-        order: str = Query(default="asc", regex="^(asc|desc)$"),
+        order: str = Query(default="asc", pattern="^(asc|desc)$"),
         db: AsyncSession = Depends(get_db)
 ):
     try:

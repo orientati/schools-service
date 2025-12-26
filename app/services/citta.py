@@ -35,7 +35,7 @@ async def get_citta(
             total=len(citta_list), 
             limit=limit,
             offset=offset,
-            citta=[CittaResponse(id=c.id, nome=c.nome, cap=c.cap, provincia=c.provincia, regione=c.regione) for c in citta_list],
+            citta=[CittaResponse(id=c.id, nome=c.nome, cap=c.codice_postale, provincia=c.provincia, regione=c.regione) for c in citta_list],
             filter_search=search,
             sort_by=sort_by,
             order=order
@@ -50,34 +50,34 @@ async def get_citta_by_id(citta_id: int, db: AsyncSession) -> CittaResponse:
         citta = result.scalars().first()
         if not citta:
             raise Exception("Città non trovata")
-        return CittaResponse(id=citta.id, nome=citta.nome, cap=citta.cap, provincia=citta.provincia, regione=citta.regione)
+        return CittaResponse(id=citta.id, nome=citta.nome, cap=citta.codice_postale, provincia=citta.provincia, regione=citta.regione)
     except Exception as e:
         raise e
 
 async def get_citta_by_zipcode(cap: str, db: AsyncSession) -> CittaResponse:
     try:
-        stmt = select(Citta).filter(Citta.cap == cap)
+        stmt = select(Citta).filter(Citta.codice_postale == cap)
         result = await db.execute(stmt)
         citta = result.scalars().first()
         if not citta:
             raise Exception("Città non trovata")
-        return CittaResponse(id=citta.id, nome=citta.nome, cap=citta.cap, provincia=citta.provincia, regione=citta.regione)
+        return CittaResponse(id=citta.id, nome=citta.nome, cap=citta.codice_postale, provincia=citta.provincia, regione=citta.regione)
     except Exception as e:
         raise e
 
 async def post_citta(citta: CittaCreate, db: AsyncSession) -> CittaResponse:
     try:
-        stmt = select(Citta).filter(Citta.nome == citta.nome, Citta.cap == citta.cap)
+        stmt = select(Citta).filter(Citta.nome == citta.nome, Citta.codice_postale == citta.cap)
         result = await db.execute(stmt)
         existing_citta = result.scalars().first()
         if existing_citta:
             raise Exception("Città già esistente")
             
-        new_citta = Citta(nome=citta.nome, cap=citta.cap, provincia=citta.provincia, regione=citta.regione)
+        new_citta = Citta(nome=citta.nome, codice_postale=citta.cap, provincia=citta.provincia, regione=citta.regione)
         db.add(new_citta)
         await db.commit()
         await db.refresh(new_citta)
-        return CittaResponse(id=new_citta.id, nome=new_citta.nome, cap=new_citta.cap, provincia=new_citta.provincia, regione=new_citta.regione)
+        return CittaResponse(id=new_citta.id, nome=new_citta.nome, cap=new_citta.codice_postale, provincia=new_citta.provincia, regione=new_citta.regione)
     except Exception as e:
         raise e
 
@@ -90,13 +90,13 @@ async def put_citta(citta_id: int, citta: CittaUpdate, db: AsyncSession) -> Citt
             raise Exception("Città non trovata")
 
         existing_citta.nome = citta.nome
-        existing_citta.cap = citta.cap
+        existing_citta.codice_postale = citta.cap
         existing_citta.provincia = citta.provincia
         existing_citta.regione = citta.regione
         
         await db.commit()
         await db.refresh(existing_citta)
-        return CittaResponse(id=existing_citta.id, nome=existing_citta.nome, cap=existing_citta.cap, provincia=existing_citta.provincia, regione=existing_citta.regione)
+        return CittaResponse(id=existing_citta.id, nome=existing_citta.nome, cap=existing_citta.codice_postale, provincia=existing_citta.provincia, regione=existing_citta.regione)
     except Exception as e:
         raise e
 

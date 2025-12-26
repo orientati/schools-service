@@ -26,7 +26,7 @@ async def get_schools(
         indirizzo: Optional[str] = Query(default=None,
                                          description="Filtra per tipo di scuola (es. Liceo, informatico, ecc.)"),
         sort_by: str = Query(default="name", description="Campo per ordinamento (es. nome, città, provincia)"),
-        order: str = Query(default="asc", regex="^(asc|desc)$", description="Ordine: asc o desc"),
+        order: str = Query(default="asc", pattern="^(asc|desc)$", description="Ordine: asc o desc"),
         db: AsyncSession = Depends(get_db)
 ):
     """
