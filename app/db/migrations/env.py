@@ -1,4 +1,7 @@
 import asyncio
+import sys
+import traceback
+
 from logging.config import fileConfig
 
 from alembic import context
@@ -82,4 +85,9 @@ async def run_migrations_online() -> None:
 if context.is_offline_mode():
     run_migrations_offline()
 else:
-    asyncio.run(run_migrations_online())
+    try:
+        asyncio.run(run_migrations_online())
+    except Exception:
+        traceback.print_exc()
+        sys.exit(1)
+

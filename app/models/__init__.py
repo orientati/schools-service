@@ -1,4 +1,4 @@
-from .città import Citta
+from .citta import Citta
 from .indirizzo import Indirizzo
 from .materia import Materia
 from .scuola import Scuola
