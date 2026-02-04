@@ -46,24 +46,21 @@ async def lifespan(app: FastAPI):
     # Avvia il broker asincrono all'avvio dell'app
     if settings.ENVIRONMENT != "testing":
         broker_instance = broker.AsyncBrokerSingleton()
-        connected = False
-        for i in range(settings.RABBITMQ_CONNECTION_RETRIES):
-            logger.info(f"Connecting to RabbitMQ (attempt {i + 1}/{settings.RABBITMQ_CONNECTION_RETRIES})...")
-            connected = await broker_instance.connect()
-            if connected:
-                break
-            logger.warning(
-                f"Failed to connect to RabbitMQ. Retrying in {settings.RABBITMQ_CONNECTION_RETRY_DELAY} seconds...")
-            await asyncio.sleep(settings.RABBITMQ_CONNECTION_RETRY_DELAY)
-
-        if not connected:
-            logger.error("Could not connect to RabbitMQ after multiple attempts. Exiting...")
-            sys.exit(1)
         
-        else:
+        try:
+            # Connect gestisce internamente i retry loggando warning invece di error
+            await broker_instance.connect(
+                retries=settings.RABBITMQ_CONNECTION_RETRIES,
+                delay=settings.RABBITMQ_CONNECTION_RETRY_DELAY
+            )
             logger.info("Connected to RabbitMQ.")
+            
             for exchange, cb in exchanges.items():
                 await broker_instance.subscribe(exchange, cb)
+                
+        except Exception as e:
+            logger.error(f"Could not connect to RabbitMQ after multiple attempts: {e}. Exiting...")
+            sys.exit(1)
 
     yield
 
