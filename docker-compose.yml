@@ -10,7 +10,7 @@ services:
 
   schools-service-migrate:
     build: .
-    command: alembic upgrade head   # sovrascrive il comando di avvio eseguendo solo le migrazioni
+    command: [ "python3", "-m", "alembic", "upgrade", "head" ]   # sovrascrive il comando di avvio eseguendo solo le migrazioni
     depends_on:
       - schools-service_db
     networks:
@@ -21,7 +21,7 @@ services:
 
   schools-service:
     build: .
-    command: gunicorn -k uvicorn.workers.UvicornWorker app.main:app --bind 0.0.0.0:8000 --workers 1
+    command: [ "python3", "-m", "gunicorn", "-k", "uvicorn.workers.UvicornWorker", "app.main:app", "--bind", "0.0.0.0:8000", "--workers", "1" ]
     depends_on:
       - schools-service_db
       - schools-service-migrate
